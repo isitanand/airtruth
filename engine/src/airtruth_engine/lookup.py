@@ -502,6 +502,23 @@ def fetch_live_aircraft_adsb(icao_prefix: str, flight_num: str, hex_code: str | 
     return None
 
 
+def _get_airlabs_keys() -> list[str]:
+    """Retrieve primary and backup AirLabs API keys from environment (comma-separated or separate vars)."""
+    raw_sources = [
+        os.environ.get("AIRLABS_API_KEY", ""),
+        os.environ.get("AIRLABS_BACKUP_API_KEY", ""),
+        os.environ.get("AIRLABS_API_KEY_2", ""),
+        os.environ.get("AIRLABS_BACKUP_KEY", ""),
+    ]
+    keys: list[str] = []
+    for raw in raw_sources:
+        for piece in raw.split(","):
+            cleaned = piece.strip()
+            if cleaned and cleaned not in keys:
+                keys.append(cleaned)
+    return keys
+
+
 def fetch_live_flight_schedule(flight_iata: str) -> dict[str, Any] | None:
     """Optional scheduled vs. actual gate timetable lookup via AIRLABS_API_KEY or AVIATIONSTACK_API_KEY."""
     if not _external_telemetry_allowed():
@@ -509,8 +526,7 @@ def fetch_live_flight_schedule(flight_iata: str) -> dict[str, Any] | None:
     iata_clean = re.sub(r"[^A-Z0-9]", "", (flight_iata or "").upper())
     if not iata_clean:
         return None
-    airlabs_raw = os.environ.get("AIRLABS_API_KEY", "").strip()
-    airlabs_keys = [k.strip() for k in airlabs_raw.split(",") if k.strip()]
+    airlabs_keys = _get_airlabs_keys()
     avstack_key = os.environ.get("AVIATIONSTACK_API_KEY", "").strip()
     if not airlabs_keys and not avstack_key:
         return None
@@ -666,8 +682,7 @@ def resolve_airport(iata: str | None) -> tuple[str | None, float | None, float |
         return None, None, None
 
     # Query AirLabs global airport catalog if API key is present
-    airlabs_raw = os.environ.get("AIRLABS_API_KEY", "").strip()
-    airlabs_keys = [k.strip() for k in airlabs_raw.split(",") if k.strip()]
+    airlabs_keys = _get_airlabs_keys()
     for airlabs_key in airlabs_keys:
         try:
             url = f"https://airlabs.co/api/v9/airports?iata_code={code}&api_key={airlabs_key}"

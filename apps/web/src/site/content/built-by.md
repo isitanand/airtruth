@@ -16,3 +16,10 @@ Everything in this repository runs locally or in production from a unified full-
 
 - All airline app skins (`IndiGo`, `Delta`, `British Airways`) are synthetic interactive demonstrations and carry no affiliation or live integration with third-party carrier reservation systems.
 - Audit metrics reflect structured aviation delay scenarios replayed through deterministic detectors.
+
+## Engineering & Architecture
+
+- **Author & Architect**: [Anand Choubey](https://anandchoubey.is-a.dev/)
+- **Portfolio**: [https://anandchoubey.is-a.dev/](https://anandchoubey.is-a.dev/)
+- **GitHub**: [@isitanand](https://github.com/isitanand)
+- **Open-Source Repository**: [https://github.com/isitanand/airtruth](https://github.com/isitanand/airtruth)

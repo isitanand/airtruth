@@ -134,10 +134,6 @@ export function Footer({ children }: { children?: ReactNode }) {
           <p>
             The Airline Delay &amp; Statutory Payout Engine. Cross-examines airline &ldquo;bad weather&rdquo; excuses against live ADS-B radar, METAR weather, runway logs, and crew duty records.
           </p>
-          <div className="footer-status-badge">
-            <span className="footer-pulse-dot" />
-            <span>ADS-B &amp; METAR Engine Active</span>
-          </div>
           <a className="btn footer-cta" href="/lookup">
             Check my flight <ArrowRight size={15} />
           </a>
@@ -151,15 +147,9 @@ export function Footer({ children }: { children?: ReactNode }) {
       </div>
       {children}
       <div className="footer-base">
-        <div className="footer-meta-row">
-          <p className="footer-note">
-            <strong>AIRTRUTH</strong> &middot; Carrier app replicas (IndiGo, Delta, British Airways) are concept telemetry sandboxes for statutory passenger rights verification under DGCA CAR &sect;3, EU261, and US DOT 14 CFR &sect;260.
-          </p>
-          <div className="footer-badge-pill">
-            <span className="footer-badge-dot" />
-            <span>SHA-256 VERIFIED AUDIT</span>
-          </div>
-        </div>
+        <p className="footer-note">
+          <strong>AIRTRUTH</strong> &middot; Carrier app replicas (IndiGo, Delta, British Airways) are concept telemetry sandboxes for statutory passenger rights verification under DGCA CAR &sect;3, EU261, and US DOT 14 CFR &sect;260.
+        </p>
 
         <div className="footer-bottom-bar">
           <div className="footer-brand-legal">

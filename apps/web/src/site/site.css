@@ -922,31 +922,6 @@ html.lenis, html.lenis body { height: auto; }
   font-size: 14px;
   line-height: 1.6;
 }
-.footer-status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 16px;
-  padding: 5px 12px;
-  background: rgba(16, 185, 129, 0.08);
-  border: 1px solid rgba(16, 185, 129, 0.22);
-  border-radius: 999px;
-  font: 600 11px var(--mono);
-  color: #34d399;
-  letter-spacing: 0.03em;
-}
-.footer-pulse-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #10b981;
-  box-shadow: 0 0 8px #10b981;
-  animation: footer-dot-pulse 2s infinite ease-in-out;
-}
-@keyframes footer-dot-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.35; transform: scale(0.85); }
-}
 .footer .footer-cta {
   margin-top: 22px;
   background: rgba(58, 43, 255, 0.12);
@@ -993,46 +968,19 @@ html.lenis, html.lenis body { height: auto; }
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   display: flex;
   flex-direction: column;
-  gap: 20px;
-}
-.footer-meta-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 18px;
-  flex-wrap: wrap;
+  gap: 16px;
 }
 .footer .footer-base .footer-note {
   margin: 0;
   padding: 0;
   border: 0;
-  max-width: 72ch;
+  max-width: 82ch;
   font-size: 12.5px;
   line-height: 1.55;
   color: #64748b;
 }
 .footer .footer-base .footer-note strong {
   color: #94a3b8;
-}
-.footer-badge-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 6px;
-  font: 600 10px var(--mono);
-  letter-spacing: 0.08em;
-  color: #94a3b8;
-  white-space: nowrap;
-}
-.footer-badge-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #3a2bff;
-  box-shadow: 0 0 6px rgba(58, 43, 255, 0.8);
 }
 .footer-bottom-bar {
   display: flex;

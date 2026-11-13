@@ -47,27 +47,38 @@ Because adverse weather is legally classified as an "extraordinary circumstance"
 
 ```mermaid
 flowchart TD
-    User["Passenger / Query (e.g. 6E-214)"] --> Router["AirTruth API Engine (FastAPI)"]
-    
-    subgraph Data_Ingestion["Parallel Telemetry Ingestion"]
-        Router --> Sched["Live Gate Schedule & Status\n(AirLabs / AviationStack)"]
-        Router --> ADSB["ADS-B Mode-S Transponder\n(adsb.lol / OpenSky)"]
-        Router --> METAR["NOAA METAR Observations\n(Origin + Destination)"]
-        Router --> RouteDB["HexDB & ADSBDB Route Matcher\n(Callsign Correlator)"]
+    User["Passenger Query<br/>(Flight Number)"] --> Engine["AirTruth Audit Engine<br/>(FastAPI)"]
+
+    subgraph Ingestion["1. Parallel Telemetry Ingestion"]
+        Engine --> Sched["Live Gate Timetable<br/>AirLabs / AviationStack"]
+        Engine --> ADSB["ADS-B Mode-S Radar<br/>adsb.lol / OpenSky"]
+        Engine --> METAR["NOAA METAR Weather<br/>Origin & Destination"]
+        Engine --> RouteDB["Route Correlation<br/>HexDB / ADSBDB"]
     end
 
-    subgraph Forensic_Audit["5-Point Forensic Cross-Examination Engine"]
-        Sched & ADSB & METAR & RouteDB --> Check1["1. Runway Weather CAT-I Evaluation\n(Visibility ≥ 800m?)"]
-        Sched & ADSB & METAR & RouteDB --> Check2["2. Airspace Flow & Peer Departures\n(Were other planes active?)"]
-        Sched & ADSB & METAR & RouteDB --> Check3["3. Rotational Turnaround History\n(Did earlier legs trigger delay?)"]
-        Sched & ADSB & METAR & RouteDB --> Check4["4. Crew Duty Hour Limits (FDTL)\n(Exceeded duty / missing standby?)"]
-        Sched & ADSB & METAR & RouteDB --> Check5["5. Statutory Passenger Law Resolver\n(DGCA CAR · EU261 · US DOT · GACA)"]
+    Sched --> Core["2. 5-Point Forensic Audit"]
+    ADSB --> Core
+    METAR --> Core
+    RouteDB --> Core
+
+    subgraph Pipeline["Forensic Analysis Pipeline"]
+        Core --> P1["Runway Weather CAT-I Minimums"]
+        Core --> P2["Airspace Flow & Peer Departures"]
+        Core --> P3["Rotational History & Prior Legs"]
+        Core --> P4["Crew Duty Time Limits (FDTL)"]
+        Core --> P5["Statutory Law (DGCA / EU261 / US DOT)"]
     end
 
-    subgraph Verdict_Output["Verification & Claims"]
-        Check1 & Check2 & Check3 & Check4 & Check5 --> Verdict["Forensic Verdict & Compensation Amount\n(₹7,500 / €600 / Full Refund)"]
-        Verdict --> Notice["Pre-Filled Legal Demand Notice\n(Nodal Officer & Civil Aviation Authority)"]
-        Verdict --> Proof["Cryptographic Digital Integrity Proof\n(Immutable SHA-256 Telemetry Seal)"]
+    P1 --> Resolution["3. Resolution & Claim Generator"]
+    P2 --> Resolution
+    P3 --> Resolution
+    P4 --> Resolution
+    P5 --> Resolution
+
+    subgraph Outputs["Output Artifacts"]
+        Resolution --> V1["Forensic Delay Verdict & Compensation Calc"]
+        Resolution --> V2["Court-Ready Legal Demand Notice"]
+        Resolution --> V3["SHA-256 Cryptographic Proof Packet"]
     end
 ```
 

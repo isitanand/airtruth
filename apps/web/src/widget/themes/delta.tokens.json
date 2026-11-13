@@ -1,0 +1,28 @@
+{
+  "$description": "Delta Air Lines skin for <airtruth-flight>.",
+  "font": {
+    "body": { "$type": "fontFamily", "$value": "\"Inter Tight Variable\", system-ui, sans-serif" }
+  },
+  "color": {
+    "ink": { "$type": "color", "$value": "#0c1b33" },
+    "muted": { "$type": "color", "$value": "#556173" },
+    "surface": { "$type": "color", "$value": "#ffffff" },
+    "surface-2": { "$type": "color", "$value": "#f3f5f8" },
+    "line": { "$type": "color", "$value": "#d7dde6" },
+    "action": { "$type": "color", "$value": "#c8102e" },
+    "action-ink": { "$type": "color", "$value": "#ffffff" },
+    "action-strong": { "$type": "color", "$value": "#9b0c23" },
+    "ok": { "$type": "color", "$value": "#0e7a4b" },
+    "ok-soft": { "$type": "color", "$value": "#e6f5ee" },
+    "check": { "$type": "color", "$value": "#8a5300" },
+    "check-soft": { "$type": "color", "$value": "#fff3dc" },
+    "alert": { "$type": "color", "$value": "#c8102e" },
+    "alert-soft": { "$type": "color", "$value": "#fdecef" },
+    "focus": { "$type": "color", "$value": "#003366" }
+  },
+  "radius": {
+    "surface": { "$type": "dimension", "$value": "12px" },
+    "control": { "$type": "dimension", "$value": "8px" }
+  }
+}
+

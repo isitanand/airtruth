@@ -1,0 +1,90 @@
+{
+  "id": "ba-tarmac-hold",
+  "title": "BA-308 · Heathrow Stand & Tarmac Hold Past 3h EU261 Cap",
+  "airline": "British Airways",
+  "flight_code": "BA-308",
+  "tail_number": "G-EUUR",
+  "route": "LHR -> CDG",
+  "detector": "tarmac_hold_excessive",
+  "notes": "Aircraft boarded on time then held 145m on stand without tow-bar pushback tug, crossing €250 EU261 limit.",
+  "tenant": { "id": "ba", "name": "British Airways", "regime": "eu261" },
+  "flight_ref": "BA-308-LHR-CDG",
+  "start": "2026-11-11T11:00:00+00:00",
+  "scheduled_dep": "2026-11-11T11:20:00+00:00",
+  "end": "2026-11-11T15:30:00+00:00",
+  "events": [
+    {
+      "at": "+0h00m",
+      "type": "flight.scheduled",
+      "status": "scheduled",
+      "substatus": "flight.scheduled",
+      "asserted_by": "airline",
+      "source_adapter": "ba.dcs",
+      "data": {
+        "flight_code": "BA-308",
+        "airline": "British Airways",
+        "tail_number": "G-EUUR",
+        "icao24": "4009D5",
+        "aircraft_type": "A320ceo",
+        "route": "LHR -> CDG",
+        "origin_icao": "EGLL",
+        "dest_icao": "LFPG",
+        "distance_km": 348,
+        "regime": "eu261",
+        "gate": "T5-A14",
+        "scheduled_dep": "2026-11-11T11:20:00+00:00"
+      }
+    },
+    {
+      "at": "+0h30m",
+      "type": "flight.status",
+      "status": "tarmac_hold",
+      "substatus": "flight.tarmac_hold",
+      "asserted_by": "adsb",
+      "source_adapter": "adsb.exchange",
+      "location": { "lat": 51.4712, "lon": -0.4872, "alt_ft": 0, "airport": "EGLL", "icao24": "4009D5", "tail": "G-EUUR" },
+      "data": { "phase": "doors_closed_stand_hold" }
+    },
+    {
+      "at": "+2h20m",
+      "type": "metar.report",
+      "asserted_by": "metar",
+      "source_adapter": "ukmet.metar",
+      "data": { "station": "EGLL", "raw_metar": "EGLL 111320Z 25008KT 9999 SCT032 12/06 Q1020", "visibility_m": 10000, "ceiling_ft": 3200, "wind_kt": 8, "flyable": true }
+    },
+    {
+      "at": "+2h35m",
+      "type": "atc.runway_log",
+      "asserted_by": "atc",
+      "source_adapter": "nats.slots",
+      "data": {
+        "airport": "EGLL",
+        "runway": "RWY 27L",
+        "window": "12:15–13:30 GMT",
+        "other_departures_count": 9,
+        "sample_flights": ["BA-456", "AF-1581", "EI-165", "LH-909"],
+        "gdp_active": false
+      }
+    },
+    {
+      "at": "+3h15m",
+      "type": "airline.excuse_claimed",
+      "status": "excuse_disputed",
+      "substatus": "airline.excuse_weather",
+      "asserted_by": "airline",
+      "source_adapter": "ba.dcs",
+      "data": { "excuse": "weather", "station": "EGLL", "claimed_window": "12:15–13:30 GMT", "message": "Channel crosswind & Paris arrival weather flow" }
+    },
+    {
+      "at": "+3h55m",
+      "type": "flight.status",
+      "status": "pushback",
+      "substatus": "flight.pushback",
+      "asserted_by": "adsb",
+      "source_adapter": "adsb.exchange",
+      "location": { "lat": 51.4695, "lon": -0.4590, "alt_ft": 0, "airport": "EGLL", "icao24": "4009D5", "tail": "G-EUUR" },
+      "data": { "phase": "gate_pushback" }
+    }
+  ]
+}
+

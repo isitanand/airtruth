@@ -1,0 +1,96 @@
+{
+  "id": "delta-crew-reserve",
+  "title": "DL-902 · First Officer FAR 117 Rest Expiry With Zero Reserve",
+  "airline": "Delta",
+  "flight_code": "DL-902",
+  "tail_number": "N376NW",
+  "route": "ATL -> SFO",
+  "detector": "crew_duty_expiry",
+  "notes": "Cockpit First Officer timed out under FAR 117 with no reserve standby in Atlanta; masked as 'ATC flow control'.",
+  "tenant": { "id": "delta", "name": "Delta", "regime": "us_dot" },
+  "flight_ref": "DL-902-ATL-SFO",
+  "start": "2026-11-11T12:00:00-05:00",
+  "scheduled_dep": "2026-11-11T12:30:00-05:00",
+  "end": "2026-11-11T16:30:00-05:00",
+  "events": [
+    {
+      "at": "+0h00m",
+      "type": "flight.scheduled",
+      "status": "scheduled",
+      "substatus": "flight.scheduled",
+      "asserted_by": "airline",
+      "source_adapter": "delta.dcs",
+      "data": {
+        "flight_code": "DL-902",
+        "airline": "Delta",
+        "tail_number": "N376NW",
+        "icao24": "A445C2",
+        "aircraft_type": "A321neo",
+        "route": "ATL -> SFO",
+        "origin_icao": "KATL",
+        "dest_icao": "KSFO",
+        "distance_km": 3442,
+        "regime": "us_dot",
+        "gate": "S-A19",
+        "scheduled_dep": "2026-11-11T12:30:00-05:00"
+      }
+    },
+    {
+      "at": "+1h50m",
+      "type": "crew.duty",
+      "status": "crew_hold",
+      "substatus": "crew.fdtl_expired",
+      "asserted_by": "crew",
+      "source_adapter": "crew.far117",
+      "data": {
+        "base": "Atlanta (ATL)",
+        "duty_hours_logged": 13.4,
+        "max_fdtl_hours": 13.0,
+        "timeout_at": "2026-11-11T13:15:00-05:00",
+        "reserve_available": false,
+        "summary": "First Officer hit FAR 117 duty ceiling (13.4h/13.0h) at ATL with zero reserve pilot in base."
+      }
+    },
+    {
+      "at": "+2h20m",
+      "type": "metar.report",
+      "asserted_by": "metar",
+      "source_adapter": "noaa.metar",
+      "data": { "station": "KATL", "raw_metar": "KATL 111952Z 31007KT 10SM CLR 18/05 A3021", "visibility_m": 16000, "ceiling_ft": 12000, "wind_kt": 7, "flyable": true }
+    },
+    {
+      "at": "+2h30m",
+      "type": "atc.runway_log",
+      "asserted_by": "atc",
+      "source_adapter": "faa.nas",
+      "data": {
+        "airport": "KATL",
+        "runway": "RWY 26L",
+        "window": "14:00–15:00 EST",
+        "other_departures_count": 11,
+        "sample_flights": ["DL-89", "DL-1504", "WN-221", "NK-408"],
+        "gdp_active": false
+      }
+    },
+    {
+      "at": "+3h15m",
+      "type": "airline.excuse_claimed",
+      "status": "excuse_disputed",
+      "substatus": "airline.excuse_weather",
+      "asserted_by": "airline",
+      "source_adapter": "delta.dcs",
+      "data": { "excuse": "weather", "station": "KATL", "claimed_window": "14:00–15:00 EST", "message": "Weather routing along midwest corridor" }
+    },
+    {
+      "at": "+4h00m",
+      "type": "flight.status",
+      "status": "pushback",
+      "substatus": "flight.pushback",
+      "asserted_by": "adsb",
+      "source_adapter": "adsb.exchange",
+      "location": { "lat": 33.6407, "lon": -84.4277, "alt_ft": 0, "airport": "KATL", "icao24": "A445C2", "tail": "N376NW" },
+      "data": { "phase": "gate_pushback" }
+    }
+  ]
+}
+

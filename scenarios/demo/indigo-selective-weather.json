@@ -1,0 +1,141 @@
+{
+  "id": "indigo-selective-weather",
+  "title": "6E-509 · Selective Fog Claim While 8 Jets Departed RWY 27",
+  "airline": "IndiGo",
+  "flight_code": "6E-509",
+  "tail_number": "VT-IJW",
+  "route": "BOM -> HYD",
+  "detector": "selective_weather",
+  "notes": "IndiGo cited Mumbai zero visibility while 8 aircraft departed RWY 27 in the exact same 45-minute window.",
+  "tenant": { "id": "indigo", "name": "IndiGo", "regime": "dgca" },
+  "flight_ref": "6E-509-BOM-HYD",
+  "start": "2026-11-11T16:00:00+05:30",
+  "scheduled_dep": "2026-11-11T16:30:00+05:30",
+  "end": "2026-11-11T20:15:00+05:30",
+  "beats": [
+    { "id": 0, "label": "Scheduled ETD (16:30 IST)", "offset": "+0h10m" },
+    { "id": 1, "label": "Inbound GOX -> BOM Delay", "offset": "+1h00m" },
+    { "id": 2, "label": "Gate Hold Posted", "offset": "+1h55m" },
+    { "id": 3, "label": "8 RWY 27 Departures Logged", "offset": "+2h35m" },
+    { "id": 4, "label": "Airline Claims Weather", "offset": "+3h10m" },
+    { "id": 5, "label": "Pushback & Claim Packet", "offset": "+3h55m" }
+  ],
+  "events": [
+    {
+      "at": "+0h00m",
+      "type": "flight.scheduled",
+      "status": "scheduled",
+      "substatus": "flight.scheduled",
+      "asserted_by": "airline",
+      "source_adapter": "dcs.schedule",
+      "data": {
+        "flight_code": "6E-509",
+        "airline": "IndiGo",
+        "tail_number": "VT-IJW",
+        "icao24": "8011C8",
+        "aircraft_type": "A320neo",
+        "route": "BOM -> HYD",
+        "origin_icao": "VABB",
+        "dest_icao": "VOHS",
+        "distance_km": 622,
+        "regime": "dgca",
+        "gate": "64",
+        "scheduled_dep": "2026-11-11T16:30:00+05:30",
+        "scheduled_arr": "2026-11-11T17:55:00+05:30"
+      }
+    },
+    {
+      "at": "+1h00m",
+      "type": "rotation.leg",
+      "status": "inbound_delayed",
+      "substatus": "rotation.leg_delayed",
+      "asserted_by": "adsb",
+      "source_adapter": "adsb.rotation",
+      "location": { "lat": 15.7366, "lon": 73.8617, "alt_ft": 0, "airport": "VOGA", "icao24": "8011C8", "tail": "VT-IJW" },
+      "data": {
+        "leg_index": 1,
+        "flight_code": "6E-508",
+        "route": "GOX -> BOM",
+        "sched_dep": "14:15 IST",
+        "act_dep": "16:10 IST",
+        "delay_min": 115,
+        "cause": "baggage_tug_shortage",
+        "summary": "VT-IJW delayed 115m in Goa ramp handling before reaching Mumbai.",
+        "lat": 15.7366,
+        "lon": 73.8617
+      }
+    },
+    {
+      "at": "+1h55m",
+      "type": "airline.delay_posted",
+      "status": "gate_hold",
+      "substatus": "airline.delay_posted",
+      "asserted_by": "airline",
+      "source_adapter": "indigo.dcs",
+      "data": {
+        "due_by": "2026-11-11T19:45:00+05:30",
+        "shown": "19:45 IST (Delayed +3h15m)",
+        "stated_reason": "weather",
+        "delay_minutes": 195,
+        "gate": "64"
+      }
+    },
+    {
+      "at": "+2h30m",
+      "type": "metar.report",
+      "asserted_by": "metar",
+      "source_adapter": "imd.metar",
+      "proof": { "metar_flyable": true },
+      "data": {
+        "station": "VABB",
+        "raw_metar": "VABB 111300Z 27009KT 5000 SCT024 28/21 Q1011 NOSIG",
+        "visibility_m": 5000,
+        "ceiling_ft": 2400,
+        "wind_kt": 9,
+        "flyable": true
+      }
+    },
+    {
+      "at": "+2h35m",
+      "type": "atc.runway_log",
+      "asserted_by": "atc",
+      "source_adapter": "aai.slots",
+      "proof": { "gdp_active": false },
+      "data": {
+        "airport": "VABB",
+        "runway": "RWY 27",
+        "window": "18:10–18:55 IST",
+        "other_departures_count": 8,
+        "sample_flights": ["AI-612", "UK-871", "QP-1304", "SG-441", "AI-540", "UK-875", "6E-401", "QP-1312"],
+        "gdp_active": false,
+        "gdp_program": null
+      }
+    },
+    {
+      "at": "+3h10m",
+      "type": "airline.excuse_claimed",
+      "status": "excuse_disputed",
+      "substatus": "airline.excuse_weather",
+      "asserted_by": "airline",
+      "source_adapter": "indigo.dcs",
+      "data": {
+        "excuse": "weather",
+        "station": "VABB",
+        "claimed_window": "18:10–18:55 IST",
+        "message": "Operations suspended due to unflyable weather at Mumbai",
+        "waives_payout": true
+      }
+    },
+    {
+      "at": "+3h55m",
+      "type": "flight.status",
+      "status": "pushback",
+      "substatus": "flight.pushback",
+      "asserted_by": "adsb",
+      "source_adapter": "adsb.exchange",
+      "location": { "lat": 19.0886, "lon": 72.8679, "alt_ft": 0, "airport": "VABB", "icao24": "8011C8", "tail": "VT-IJW" },
+      "data": { "phase": "gate_pushback" }
+    }
+  ]
+}
+

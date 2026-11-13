@@ -1,0 +1,27 @@
+[project]
+name = "airtruth-engine"
+version = "0.1.0"
+description = "AIRTRUTH: Aviation Delay Verification & Statutory Compensation Engine"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.7",
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+    "httpx>=0.27",
+]
+
+[project.optional-dependencies]
+postgres = ["psycopg[binary]>=3.2", "pgserver>=0.1"]
+redis = ["redis>=5"]
+dev = ["pytest>=8", "psycopg[binary]>=3.2", "pgserver>=0.1", "redis>=5", "fakeredis>=2.20"]
+llm = ["anthropic>=1.9"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/airtruth_engine"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

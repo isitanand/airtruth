@@ -1,0 +1,74 @@
+@import '@fontsource-variable/inter-tight';
+@import '@fontsource-variable/jetbrains-mono';
+
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  font-family: 'Inter Tight Variable', system-ui, -apple-system, sans-serif;
+  background: #f3f4f2; color: #0b0f17;
+  -webkit-font-smoothing: antialiased;
+}
+.host-shell { min-height: 100vh; display: flex; flex-direction: column; }
+.concept-banner {
+  margin: 0; padding: 6px 12px; font-size: 10.5px; font-weight: 600;
+  letter-spacing: 0.03em; text-transform: uppercase;
+  background: #0b0f17; color: #c7ccd6; text-align: center;
+}
+.carrier-bar { padding: 14px 16px 12px; display: grid; gap: 6px; }
+.carrier-top { display: flex; align-items: center; justify-content: space-between; }
+.carrier-mark { display: flex; align-items: center; gap: 7px; font-size: 16px; letter-spacing: -0.02em; }
+.statute-pill { font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 999px; color: #fff; }
+.carrier-sub { margin: 0; font-size: 12px; opacity: 0.85; }
+.flight-switch { display: flex; gap: 6px; margin-top: 4px; }
+.flight-switch button {
+  flex: 1; border: 1px solid rgba(255,255,255,0.28); background: rgba(255,255,255,0.1);
+  color: #fff; border-radius: 8px; padding: 6px 8px; font-size: 11.5px; font-weight: 600; cursor: pointer;
+}
+.flight-switch button[aria-selected="true"] { background: #fff; color: #0b0f17; border-color: #fff; }
+
+.host-main { padding: 12px 12px 24px; display: grid; gap: 10px; }
+.flight-hero-card {
+  background: #fff; border: 1px solid #dde0db; border-radius: 14px; padding: 12px 14px;
+  display: grid; gap: 8px;
+}
+.flight-row-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.eyebrow { font-size: 11px; color: #555c6a; font-weight: 600; display: block; }
+.flight-hero-card h1 { margin: 2px 0 0; font-size: 20px; letter-spacing: -0.02em; }
+.delay-chip {
+  display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 8px;
+  background: #fdebea; color: #b0241c; font-size: 12px; font-weight: 700;
+}
+.gate-strip { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: #555c6a; }
+.gate-strip span { display: inline-flex; align-items: center; gap: 4px; }
+
+.air-map { border-radius: 14px; overflow: hidden; border: 1px solid #1e2636; background: #0b0f17; }
+.air-map.flashing { outline: 3px solid #3a2bff; box-shadow: 0 0 18px rgba(58,43,255,0.45); }
+.air-svg { width: 100%; height: auto; display: block; }
+.air-telemetry {
+  display: flex; justify-content: space-between; gap: 8px; padding: 7px 10px;
+  background: #131926; color: #cfd6e3; font-size: 10.5px; flex-wrap: wrap;
+}
+.air-telemetry b { color: #8be0b8; margin-right: 3px; }
+
+.rotation-card {
+  background: #fff; border: 1px solid #dde0db; border-radius: 12px; padding: 10px 12px;
+  display: grid; gap: 6px;
+}
+.rotation-head { display: flex; justify-content: space-between; font-size: 12px; }
+.rotation-head span { font-family: 'JetBrains Mono Variable', ui-monospace, monospace; color: #555c6a; }
+.rotation-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.rotation-list li {
+  display: grid; grid-template-columns: 58px 1fr auto; gap: 8px; align-items: center;
+  font-size: 11.5px; padding: 4px 8px; border-radius: 7px; background: #f3f4f2;
+}
+.rotation-list li.late { background: #fff3dc; color: #7a4600; font-weight: 600; }
+.leg-code { font-family: 'JetBrains Mono Variable', ui-monospace, monospace; font-weight: 700; }
+.leg-delay { font-family: 'JetBrains Mono Variable', ui-monospace, monospace; font-weight: 700; }
+
+.waiting { font-size: 13px; color: #555c6a; text-align: center; padding: 16px; }
+.host-foot {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  font-size: 11px; color: #555c6a; padding-top: 4px;
+}
+.host-foot code { font-family: 'JetBrains Mono Variable', ui-monospace, monospace; color: #0b0f17; }
+

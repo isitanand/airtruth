@@ -1,0 +1,137 @@
+{
+  "id": "ba-selective-weather",
+  "title": "BA-117 · Heathrow Weather Claim Disproved by 8 RWY 27R Departures",
+  "airline": "British Airways",
+  "flight_code": "BA-117",
+  "tail_number": "G-XWBA",
+  "route": "LHR -> JFK",
+  "detector": "selective_weather",
+  "notes": "British Airways invoked EU261 weather exemption despite VMC visibility (8000m) and 8 widebody departures off RWY 27R.",
+  "tenant": { "id": "ba", "name": "British Airways", "regime": "eu261" },
+  "flight_ref": "BA-117-LHR-JFK",
+  "start": "2026-11-11T08:00:00+00:00",
+  "scheduled_dep": "2026-11-11T08:25:00+00:00",
+  "end": "2026-11-11T12:40:00+00:00",
+  "beats": [
+    { "id": 0, "label": "Scheduled ETD (08:25 GMT)", "offset": "+0h10m" },
+    { "id": 1, "label": "G-XWBA Inbound Delay", "offset": "+1h10m" },
+    { "id": 2, "label": "EU261 3h Clock Breach", "offset": "+2h05m" },
+    { "id": 3, "label": "8 RWY 27R Departures", "offset": "+2h40m" },
+    { "id": 4, "label": "Airline Claims Weather", "offset": "+3h25m" },
+    { "id": 5, "label": "Pushback & €600 Packet", "offset": "+4h05m" }
+  ],
+  "events": [
+    {
+      "at": "+0h00m",
+      "type": "flight.scheduled",
+      "status": "scheduled",
+      "substatus": "flight.scheduled",
+      "asserted_by": "airline",
+      "source_adapter": "ba.dcs",
+      "data": {
+        "flight_code": "BA-117",
+        "airline": "British Airways",
+        "tail_number": "G-XWBA",
+        "icao24": "407796",
+        "aircraft_type": "A350-1000",
+        "route": "LHR -> JFK",
+        "origin_icao": "EGLL",
+        "dest_icao": "KJFK",
+        "distance_km": 5540,
+        "regime": "eu261",
+        "gate": "T5-C62",
+        "scheduled_dep": "2026-11-11T08:25:00+00:00"
+      }
+    },
+    {
+      "at": "+1h10m",
+      "type": "rotation.leg",
+      "status": "inbound_delayed",
+      "substatus": "rotation.leg_delayed",
+      "asserted_by": "adsb",
+      "source_adapter": "adsb.rotation",
+      "location": { "lat": 25.2532, "lon": 55.3657, "alt_ft": 0, "airport": "OMDB", "icao24": "407796", "tail": "G-XWBA" },
+      "data": {
+        "leg_index": 1,
+        "flight_code": "BA-106",
+        "route": "DXB -> LHR",
+        "sched_dep": "01:30 GST",
+        "act_dep": "04:10 GST",
+        "delay_min": 160,
+        "cause": "cargo_door_seal",
+        "summary": "G-XWBA departed Dubai 160m late due to forward cargo door sensor swap prior to Heathrow arrival.",
+        "lat": 25.2532,
+        "lon": 55.3657
+      }
+    },
+    {
+      "at": "+2h15m",
+      "type": "airline.delay_posted",
+      "status": "gate_hold",
+      "substatus": "airline.delay_posted",
+      "asserted_by": "airline",
+      "source_adapter": "ba.dcs",
+      "data": {
+        "due_by": "2026-11-11T12:15:00+00:00",
+        "shown": "12:15 GMT (Delayed +3h50m)",
+        "stated_reason": "weather",
+        "delay_minutes": 230,
+        "gate": "T5-C62"
+      }
+    },
+    {
+      "at": "+2h30m",
+      "type": "metar.report",
+      "asserted_by": "metar",
+      "source_adapter": "ukmet.metar",
+      "data": {
+        "station": "EGLL",
+        "raw_metar": "EGLL 111020Z 26012KT 8000 FEW028 11/07 Q1019 NOSIG",
+        "visibility_m": 8000,
+        "ceiling_ft": 2800,
+        "wind_kt": 12,
+        "flyable": true
+      }
+    },
+    {
+      "at": "+2h40m",
+      "type": "atc.runway_log",
+      "asserted_by": "atc",
+      "source_adapter": "nats.slots",
+      "data": {
+        "airport": "EGLL",
+        "runway": "RWY 27R",
+        "window": "09:45–10:30 GMT",
+        "other_departures_count": 8,
+        "sample_flights": ["VS-45", "AA-107", "UA-17", "AF-1681", "LH-915", "BA-177", "DL-3", "QR-8"],
+        "gdp_active": false
+      }
+    },
+    {
+      "at": "+3h25m",
+      "type": "airline.excuse_claimed",
+      "status": "excuse_disputed",
+      "substatus": "airline.excuse_weather",
+      "asserted_by": "airline",
+      "source_adapter": "ba.dcs",
+      "data": {
+        "excuse": "weather",
+        "station": "EGLL",
+        "claimed_window": "09:45–10:30 GMT",
+        "message": "Extraordinary circumstance: Heathrow fog & flow restriction (EU261 exempt)",
+        "waives_payout": true
+      }
+    },
+    {
+      "at": "+4h05m",
+      "type": "flight.status",
+      "status": "pushback",
+      "substatus": "flight.pushback",
+      "asserted_by": "adsb",
+      "source_adapter": "adsb.exchange",
+      "location": { "lat": 51.4700, "lon": -0.4543, "alt_ft": 0, "airport": "EGLL", "icao24": "407796", "tail": "G-XWBA" },
+      "data": { "phase": "gate_pushback" }
+    }
+  ]
+}
+

@@ -1,0 +1,222 @@
+{
+  "id": "indigo-crew-timeout",
+  "title": "6E-214 · Mumbai Crew Timeout Masked as Delhi Weather",
+  "airline": "IndiGo",
+  "flight_code": "6E-214",
+  "tail_number": "VT-IFU",
+  "route": "DEL -> BLR",
+  "detector": "tail_number_chaining",
+  "notes": "Your flight wasn't delayed by 'Weather'. Aircraft VT-IFU had a crew FDTL timeout in Mumbai 6 hours ago.",
+  "tenant": { "id": "indigo", "name": "IndiGo", "regime": "dgca" },
+  "flight_ref": "6E-214-DEL-BLR",
+  "start": "2026-11-11T15:00:00+05:30",
+  "scheduled_dep": "2026-11-11T15:30:00+05:30",
+  "end": "2026-11-11T19:45:00+05:30",
+  "beats": [
+    { "id": 0, "label": "Scheduled ETD (15:30 IST)", "offset": "+0h10m" },
+    { "id": 1, "label": "VT-IFU 4-Leg Rotation Trace", "offset": "+1h10m" },
+    { "id": 2, "label": "Mumbai Crew FDTL Timeout", "offset": "+2h10m" },
+    { "id": 3, "label": "METAR & 8 RWY Departures", "offset": "+2h40m" },
+    { "id": 4, "label": "Airline Claims Weather", "offset": "+3h20m" },
+    { "id": 5, "label": "Gate Pushback & DGCA Packet", "offset": "+4h05m" }
+  ],
+  "events": [
+    {
+      "at": "+0h00m",
+      "type": "flight.scheduled",
+      "status": "scheduled",
+      "substatus": "flight.scheduled",
+      "asserted_by": "airline",
+      "source_adapter": "dcs.schedule",
+      "data": {
+        "flight_code": "6E-214",
+        "airline": "IndiGo",
+        "tail_number": "VT-IFU",
+        "icao24": "800E94",
+        "aircraft_type": "A321neo",
+        "route": "DEL -> BLR",
+        "origin_icao": "VIDP",
+        "dest_icao": "VOBL",
+        "distance_km": 1740,
+        "regime": "dgca",
+        "gate": "B42",
+        "scheduled_dep": "2026-11-11T15:30:00+05:30",
+        "scheduled_arr": "2026-11-11T18:20:00+05:30",
+        "gate_etd_text": "15:30 IST · Gate B42"
+      }
+    },
+    {
+      "at": "+0h15m",
+      "type": "rotation.leg",
+      "asserted_by": "adsb",
+      "source_adapter": "adsb.rotation",
+      "location": { "lat": 19.0896, "lon": 72.8656, "alt_ft": 0, "airport": "VABB", "icao24": "800E94", "tail": "VT-IFU" },
+      "data": {
+        "leg_index": 1,
+        "flight_code": "6E-112",
+        "route": "BOM -> PNQ",
+        "sched_dep": "08:10 IST",
+        "act_dep": "08:55 IST",
+        "delay_min": 45,
+        "cause": "late_turnaround",
+        "lat": 19.0896,
+        "lon": 72.8656
+      }
+    },
+    {
+      "at": "+0h30m",
+      "type": "rotation.leg",
+      "status": "inbound_delayed",
+      "substatus": "rotation.leg_delayed",
+      "asserted_by": "adsb",
+      "source_adapter": "adsb.rotation",
+      "location": { "lat": 18.5821, "lon": 73.9197, "alt_ft": 0, "airport": "VAPO", "icao24": "800E94", "tail": "VT-IFU" },
+      "data": {
+        "leg_index": 2,
+        "flight_code": "6E-113",
+        "route": "PNQ -> BOM",
+        "sched_dep": "09:40 IST",
+        "act_dep": "12:15 IST",
+        "delay_min": 155,
+        "cause": "crew_fdtl_timeout",
+        "summary": "Aircraft VT-IFU had a crew FDTL timeout in Mumbai 6 hours ago (12:15 IST) before weather began",
+        "lat": 18.5821,
+        "lon": 73.9197
+      }
+    },
+    {
+      "at": "+0h50m",
+      "type": "rotation.leg",
+      "asserted_by": "adsb",
+      "source_adapter": "adsb.rotation",
+      "location": { "lat": 23.0772, "lon": 72.6347, "alt_ft": 0, "airport": "VAAH", "icao24": "800E94", "tail": "VT-IFU" },
+      "data": {
+        "leg_index": 3,
+        "flight_code": "6E-408",
+        "route": "BOM -> AMD",
+        "sched_dep": "11:45 IST",
+        "act_dep": "14:25 IST",
+        "delay_min": 160,
+        "cause": "cascading_rotation",
+        "lat": 23.0772,
+        "lon": 72.6347
+      }
+    },
+    {
+      "at": "+1h10m",
+      "type": "rotation.leg",
+      "asserted_by": "adsb",
+      "source_adapter": "adsb.rotation",
+      "location": { "lat": 28.5562, "lon": 77.1000, "alt_ft": 0, "airport": "VIDP", "icao24": "800E94", "tail": "VT-IFU" },
+      "data": {
+        "leg_index": 4,
+        "flight_code": "6E-409",
+        "route": "AMD -> DEL",
+        "sched_dep": "13:30 IST",
+        "act_dep": "16:20 IST",
+        "delay_min": 170,
+        "cause": "cascading_rotation",
+        "lat": 28.5562,
+        "lon": 77.1000
+      }
+    },
+    {
+      "at": "+2h05m",
+      "type": "crew.duty",
+      "status": "crew_hold",
+      "substatus": "crew.fdtl_expired",
+      "asserted_by": "crew",
+      "source_adapter": "crew.fdtl_roster",
+      "data": {
+        "base": "Mumbai (BOM)",
+        "duty_hours_logged": 12.2,
+        "max_fdtl_hours": 12.0,
+        "timeout_at": "2026-11-11T12:15:00+05:30",
+        "reserve_available": false,
+        "summary": "Aircraft VT-IFU had a crew FDTL timeout in Mumbai 6 hours ago (12.2h/12.0h FDTL) with no standby crew available."
+      }
+    },
+    {
+      "at": "+2h25m",
+      "type": "airline.delay_posted",
+      "status": "gate_hold",
+      "substatus": "airline.delay_posted",
+      "asserted_by": "airline",
+      "source_adapter": "indigo.dcs",
+      "data": {
+        "due_by": "2026-11-11T19:00:00+05:30",
+        "shown": "19:00 IST (Delayed +3h30m)",
+        "stated_reason": "weather",
+        "delay_minutes": 210,
+        "gate": "B42"
+      }
+    },
+    {
+      "at": "+2h35m",
+      "type": "metar.report",
+      "asserted_by": "metar",
+      "source_adapter": "imd.metar",
+      "proof": { "metar_flyable": true },
+      "data": {
+        "station": "VIDP",
+        "raw_metar": "VIDP 111130Z 28006KT 6000 FEW025 22/13 Q1016 NOSIG",
+        "visibility_m": 6000,
+        "ceiling_ft": 2500,
+        "wind_kt": 6,
+        "flyable": true
+      }
+    },
+    {
+      "at": "+2h40m",
+      "type": "atc.runway_log",
+      "asserted_by": "atc",
+      "source_adapter": "aai.slots",
+      "proof": { "gdp_active": false },
+      "data": {
+        "airport": "VIDP",
+        "runway": "RWY 28/10",
+        "window": "17:15–18:15 IST",
+        "other_departures_count": 8,
+        "sample_flights": ["AI-502", "UK-811", "QP-1102", "6E-631", "AI-804", "SG-143", "UK-817", "QP-1140"],
+        "gdp_active": false,
+        "gdp_program": null
+      }
+    },
+    {
+      "at": "+2h42m",
+      "type": "adsb.position",
+      "asserted_by": "adsb",
+      "source_adapter": "adsb.exchange",
+      "location": { "lat": 28.5562, "lon": 77.1000, "alt_ft": 0, "airport": "VIDP", "icao24": "800E94", "tail": "VT-IFU" },
+      "proof": { "adsb_signed": true },
+      "data": { "callsign": "IGO214", "groundspeed_kts": 0, "phase": "apron_stand_b42" }
+    },
+    {
+      "at": "+3h20m",
+      "type": "airline.excuse_claimed",
+      "status": "excuse_disputed",
+      "substatus": "airline.excuse_weather",
+      "asserted_by": "airline",
+      "source_adapter": "indigo.dcs",
+      "raw": { "code": "WX_DEL", "message": "Flight delayed due to en-route bad weather at Delhi (extraordinary circumstance)" },
+      "data": {
+        "excuse": "weather",
+        "station": "VIDP",
+        "claimed_window": "17:15–18:15 IST",
+        "message": "Flight delayed due to adverse weather at Delhi — DGCA payout exempted",
+        "waives_payout": true
+      }
+    },
+    {
+      "at": "+4h05m",
+      "type": "flight.status",
+      "status": "pushback",
+      "substatus": "flight.pushback",
+      "asserted_by": "adsb",
+      "source_adapter": "adsb.exchange",
+      "location": { "lat": 28.5548, "lon": 77.0942, "alt_ft": 0, "airport": "VIDP", "icao24": "800E94", "tail": "VT-IFU" },
+      "data": { "phase": "gate_pushback" }
+    }
+  ]
+}
+

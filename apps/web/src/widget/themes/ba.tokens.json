@@ -1,0 +1,28 @@
+{
+  "$description": "British Airways skin for <airtruth-flight>.",
+  "font": {
+    "body": { "$type": "fontFamily", "$value": "\"Inter Tight Variable\", system-ui, sans-serif" }
+  },
+  "color": {
+    "ink": { "$type": "color", "$value": "#0f204b" },
+    "muted": { "$type": "color", "$value": "#58627a" },
+    "surface": { "$type": "color", "$value": "#ffffff" },
+    "surface-2": { "$type": "color", "$value": "#f4f6fa" },
+    "line": { "$type": "color", "$value": "#dce2ee" },
+    "action": { "$type": "color", "$value": "#075aaa" },
+    "action-ink": { "$type": "color", "$value": "#ffffff" },
+    "action-strong": { "$type": "color", "$value": "#054280" },
+    "ok": { "$type": "color", "$value": "#0e7a4b" },
+    "ok-soft": { "$type": "color", "$value": "#e6f5ee" },
+    "check": { "$type": "color", "$value": "#8a5300" },
+    "check-soft": { "$type": "color", "$value": "#fff3dc" },
+    "alert": { "$type": "color", "$value": "#c8102e" },
+    "alert-soft": { "$type": "color", "$value": "#fdecef" },
+    "focus": { "$type": "color", "$value": "#075aaa" }
+  },
+  "radius": {
+    "surface": { "$type": "dimension", "$value": "14px" },
+    "control": { "$type": "dimension", "$value": "10px" }
+  }
+}
+

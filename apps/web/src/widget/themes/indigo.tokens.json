@@ -1,0 +1,28 @@
+{
+  "$description": "IndiGo 6E skin for <airtruth-flight>.",
+  "font": {
+    "body": { "$type": "fontFamily", "$value": "\"Inter Tight Variable\", system-ui, sans-serif" }
+  },
+  "color": {
+    "ink": { "$type": "color", "$value": "#0b1437" },
+    "muted": { "$type": "color", "$value": "#525d7a" },
+    "surface": { "$type": "color", "$value": "#ffffff" },
+    "surface-2": { "$type": "color", "$value": "#eef2ff" },
+    "line": { "$type": "color", "$value": "#d8e0f5" },
+    "action": { "$type": "color", "$value": "#001b94" },
+    "action-ink": { "$type": "color", "$value": "#ffffff" },
+    "action-strong": { "$type": "color", "$value": "#00136b" },
+    "ok": { "$type": "color", "$value": "#0e7a4b" },
+    "ok-soft": { "$type": "color", "$value": "#e6f5ee" },
+    "check": { "$type": "color", "$value": "#8a5300" },
+    "check-soft": { "$type": "color", "$value": "#fff3dc" },
+    "alert": { "$type": "color", "$value": "#c41e3a" },
+    "alert-soft": { "$type": "color", "$value": "#fdebee" },
+    "focus": { "$type": "color", "$value": "#001b94" }
+  },
+  "radius": {
+    "surface": { "$type": "dimension", "$value": "16px" },
+    "control": { "$type": "dimension", "$value": "10px" }
+  }
+}
+

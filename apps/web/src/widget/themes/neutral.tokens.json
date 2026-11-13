@@ -1,0 +1,27 @@
+{
+  "$description": "Neutral default tokens for <airtruth-flight>.",
+  "font": {
+    "body": { "$type": "fontFamily", "$value": "\"Inter Tight Variable\", system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" }
+  },
+  "color": {
+    "ink": { "$type": "color", "$value": "#0b0f17" },
+    "muted": { "$type": "color", "$value": "#555c6a" },
+    "surface": { "$type": "color", "$value": "#ffffff" },
+    "surface-2": { "$type": "color", "$value": "#f3f4f2" },
+    "line": { "$type": "color", "$value": "#dde0db" },
+    "action": { "$type": "color", "$value": "#3a2bff" },
+    "action-ink": { "$type": "color", "$value": "#ffffff" },
+    "action-strong": { "$type": "color", "$value": "#2a1ee0" },
+    "ok": { "$type": "color", "$value": "#0e7a4b" },
+    "ok-soft": { "$type": "color", "$value": "#e6f5ee" },
+    "check": { "$type": "color", "$value": "#8a5300" },
+    "check-soft": { "$type": "color", "$value": "#fff3dc" },
+    "alert": { "$type": "color", "$value": "#b0241c" },
+    "alert-soft": { "$type": "color", "$value": "#fdebea" },
+    "focus": { "$type": "color", "$value": "#3a2bff" }
+  },
+  "radius": {
+    "surface": { "$type": "dimension", "$value": "14px" },
+    "control": { "$type": "dimension", "$value": "10px" }
+  }
+}

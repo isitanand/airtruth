@@ -1,0 +1,41 @@
+{
+  "name": "@airtruth/js",
+  "version": "0.1.0",
+  "description": "AirTruth browser SDK: the <airtruth-flight> widget, headless aviation telemetry client, and React wrapper.",
+  "private": true,
+  "main": "./dist/airtruth.js",
+  "module": "./dist/airtruth.mjs",
+  "exports": {
+    ".": {
+      "import": "./dist/airtruth.mjs",
+      "require": "./dist/airtruth.js"
+    },
+    "./react": {
+      "import": "./dist/react.mjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && vite build --config vite.config.mts && vite build --config vite.react.config.mts"
+  },
+  "dependencies": {
+    "lucide": "^1.48.0"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.18",
+    "react": "^19.2.8",
+    "typescript": "~6.0.2",
+    "vite": "^8.3.0"
+  }
+}

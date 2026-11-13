@@ -1,0 +1,195 @@
+{
+  "id": "delta-tail-chain",
+  "title": "DL-418 · 4-Leg Tail Chain on N842DN Before Storm Window",
+  "airline": "Delta",
+  "flight_code": "DL-418",
+  "tail_number": "N842DN",
+  "route": "JFK -> LAX",
+  "detector": "tail_number_chaining",
+  "notes": "Delta claimed JFK weather/ATC hold while N842DN was already 3h20m behind from BOS->ATL->ORD->DTW->JFK with zero FAA GDP.",
+  "tenant": { "id": "delta", "name": "Delta", "regime": "us_dot" },
+  "flight_ref": "DL-418-JFK-LAX",
+  "start": "2026-11-11T10:00:00-05:00",
+  "scheduled_dep": "2026-11-11T10:30:00-05:00",
+  "end": "2026-11-11T14:45:00-05:00",
+  "beats": [
+    { "id": 0, "label": "Scheduled ETD (10:30 EST)", "offset": "+0h10m" },
+    { "id": 1, "label": "4-Leg N842DN Rotation Trace", "offset": "+1h10m" },
+    { "id": 2, "label": "FAA GDP & METAR Check", "offset": "+2h30m" },
+    { "id": 3, "label": "8 RWY 22R Departures", "offset": "+2h40m" },
+    { "id": 4, "label": "Airline Claims Weather", "offset": "+3h15m" },
+    { "id": 5, "label": "Pushback & US DOT Packet", "offset": "+4h05m" }
+  ],
+  "events": [
+    {
+      "at": "+0h00m",
+      "type": "flight.scheduled",
+      "status": "scheduled",
+      "substatus": "flight.scheduled",
+      "asserted_by": "airline",
+      "source_adapter": "delta.dcs",
+      "data": {
+        "flight_code": "DL-418",
+        "airline": "Delta",
+        "tail_number": "N842DN",
+        "icao24": "AB8D21",
+        "aircraft_type": "B767-400ER",
+        "route": "JFK -> LAX",
+        "origin_icao": "KJFK",
+        "dest_icao": "KLAX",
+        "distance_km": 3982,
+        "regime": "us_dot",
+        "gate": "T4-B28",
+        "scheduled_dep": "2026-11-11T10:30:00-05:00",
+        "scheduled_arr": "2026-11-11T13:50:00-08:00"
+      }
+    },
+    {
+      "at": "+0h20m",
+      "type": "rotation.leg",
+      "asserted_by": "adsb",
+      "source_adapter": "adsb.rotation",
+      "location": { "lat": 42.3656, "lon": -71.0096, "alt_ft": 0, "airport": "KBOS", "icao24": "AB8D21", "tail": "N842DN" },
+      "data": {
+        "leg_index": 1,
+        "flight_code": "DL-112",
+        "route": "BOS -> ATL",
+        "sched_dep": "05:15 EST",
+        "act_dep": "06:35 EST",
+        "delay_min": 80,
+        "cause": "apu_maintenance",
+        "summary": "N842DN delayed 80m in Boston with deferred APU starter valve inspection before any weather existed.",
+        "lat": 42.3656,
+        "lon": -71.0096
+      }
+    },
+    {
+      "at": "+0h40m",
+      "type": "rotation.leg",
+      "asserted_by": "adsb",
+      "source_adapter": "adsb.rotation",
+      "location": { "lat": 33.6407, "lon": -84.4277, "alt_ft": 0, "airport": "KATL", "icao24": "AB8D21", "tail": "N842DN" },
+      "data": {
+        "leg_index": 2,
+        "flight_code": "DL-204",
+        "route": "ATL -> ORD",
+        "sched_dep": "07:45 EST",
+        "act_dep": "09:40 EST",
+        "delay_min": 115,
+        "cause": "cascading_rotation",
+        "lat": 33.6407,
+        "lon": -84.4277
+      }
+    },
+    {
+      "at": "+0h55m",
+      "type": "rotation.leg",
+      "asserted_by": "adsb",
+      "source_adapter": "adsb.rotation",
+      "location": { "lat": 41.9742, "lon": -87.9073, "alt_ft": 0, "airport": "KORD", "icao24": "AB8D21", "tail": "N842DN" },
+      "data": {
+        "leg_index": 3,
+        "flight_code": "DL-319",
+        "route": "ORD -> DTW",
+        "sched_dep": "09:30 CST",
+        "act_dep": "12:15 CST",
+        "delay_min": 165,
+        "cause": "cascading_rotation",
+        "lat": 41.9742,
+        "lon": -87.9073
+      }
+    },
+    {
+      "at": "+1h10m",
+      "type": "rotation.leg",
+      "status": "inbound_delayed",
+      "substatus": "rotation.leg_delayed",
+      "asserted_by": "adsb",
+      "source_adapter": "adsb.rotation",
+      "location": { "lat": 40.6413, "lon": -73.7781, "alt_ft": 0, "airport": "KJFK", "icao24": "AB8D21", "tail": "N842DN" },
+      "data": {
+        "leg_index": 4,
+        "flight_code": "DL-417",
+        "route": "DTW -> JFK",
+        "sched_dep": "08:50 EST",
+        "act_dep": "12:10 EST",
+        "delay_min": 200,
+        "cause": "cascading_rotation",
+        "lat": 40.6413,
+        "lon": -73.7781
+      }
+    },
+    {
+      "at": "+2h20m",
+      "type": "airline.delay_posted",
+      "status": "gate_hold",
+      "substatus": "airline.delay_posted",
+      "asserted_by": "airline",
+      "source_adapter": "delta.dcs",
+      "data": {
+        "due_by": "2026-11-11T14:10:00-05:00",
+        "shown": "14:10 EST (Delayed +3h40m)",
+        "stated_reason": "weather",
+        "delay_minutes": 220,
+        "gate": "T4-B28"
+      }
+    },
+    {
+      "at": "+2h30m",
+      "type": "metar.report",
+      "asserted_by": "metar",
+      "source_adapter": "noaa.metar",
+      "proof": { "metar_flyable": true },
+      "data": {
+        "station": "KJFK",
+        "raw_metar": "KJFK 111751Z 23011KT 10SM FEW045 BKN250 14/04 A3014",
+        "visibility_m": 16000,
+        "ceiling_ft": 4500,
+        "wind_kt": 11,
+        "flyable": true
+      }
+    },
+    {
+      "at": "+2h40m",
+      "type": "atc.runway_log",
+      "asserted_by": "atc",
+      "source_adapter": "faa.nas",
+      "proof": { "gdp_active": false },
+      "data": {
+        "airport": "KJFK",
+        "runway": "RWY 22R",
+        "window": "12:15–13:15 EST",
+        "other_departures_count": 8,
+        "sample_flights": ["B6-123", "AA-2", "UA-511", "DL-105", "VS-4", "B6-623", "AA-118", "AF-23"],
+        "gdp_active": false,
+        "gdp_program": null
+      }
+    },
+    {
+      "at": "+3h15m",
+      "type": "airline.excuse_claimed",
+      "status": "excuse_disputed",
+      "substatus": "airline.excuse_weather",
+      "asserted_by": "airline",
+      "source_adapter": "delta.dcs",
+      "data": {
+        "excuse": "weather",
+        "station": "KJFK",
+        "claimed_window": "12:15–13:15 EST",
+        "message": "Delay attributed to Northeast corridor convective weather & ATC flow",
+        "waives_payout": true
+      }
+    },
+    {
+      "at": "+4h05m",
+      "type": "flight.status",
+      "status": "pushback",
+      "substatus": "flight.pushback",
+      "asserted_by": "adsb",
+      "source_adapter": "adsb.exchange",
+      "location": { "lat": 40.6413, "lon": -73.7781, "alt_ft": 0, "airport": "KJFK", "icao24": "AB8D21", "tail": "N842DN" },
+      "data": { "phase": "gate_pushback" }
+    }
+  ]
+}
+

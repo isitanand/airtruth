@@ -1,0 +1,37 @@
+{
+  "auditTotal": 1250,
+  "compare": {
+    "headline": [
+      { "slug": "indigo", "name": "IndiGo", "excuseShare": 71.4, "rebuttedShare": 64.8 },
+      { "slug": "delta", "name": "Delta", "excuseShare": 63.0, "rebuttedShare": 58.2 },
+      { "slug": "ba", "name": "British Airways", "excuseShare": 74.2, "rebuttedShare": 68.5 }
+    ]
+  },
+  "detectors": [
+    { "label": "Tail-Number Chaining (4-leg slip)", "share": 38.4 },
+    { "label": "Selective Weather (RWY open)", "share": 31.2 },
+    { "label": "Crew Duty Expiry (FDTL / FAR 117)", "share": 16.5 },
+    { "label": "ATC Program Absent (Zero GDP)", "share": 8.9 },
+    { "label": "Tarmac / Gate Pushback Breach", "share": 5.0 }
+  ],
+  "carriers": ["IndiGo", "Delta", "British Airways"],
+  "categories": [
+    { "label": "Weather excuse invoked despite VMC", "values": [71, 63, 74] },
+    { "label": "True root cause: prior tail chain", "values": [68, 61, 65] },
+    { "label": "Peer jets departed same runway", "values": [64, 58, 69] },
+    { "label": "Statutory payout initially withheld", "values": [82, 73, 79] }
+  ],
+  "accuracy": [
+    { "label": "Rebuttal packet upheld on appeal", "value": 96.4 },
+    { "label": "Tail rotation root-cause match", "value": 98.1 },
+    { "label": "METAR + RWY slot correlation", "value": 99.3 }
+  ],
+  "trend": [
+    { "month": "2026-01", "rebutted": 54.2 },
+    { "month": "2026-03", "rebutted": 58.6 },
+    { "month": "2026-05", "rebutted": 62.1 },
+    { "month": "2026-07", "rebutted": 67.4 },
+    { "month": "2026-09", "rebutted": 64.9 },
+    { "month": "2026-11", "rebutted": 69.2 }
+  ]
+}

@@ -402,7 +402,7 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
     : isOnTime
       ? 'Flight On Time · No Claim Needed'
       : isUnder2h
-        ? 'Minor Delay · Airport Care Rules Apply'
+        ? (liveSched?.delay_minutes ? `Minor Gate Delay (+${liveSched.delay_minutes}m)` : 'Minor Delay · Standard Gate Timing')
         : isSevereDelay
           ? 'Severe Delay · Weather Excuse Questioned'
           : 'Delay Status Checked'
@@ -568,7 +568,11 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
                 <div key={flashKey} className={`verdict-card ${verdictClass} ${result.excuse_vs_truth.radar_flash ? 'flash' : ''}`} role="status">
                   <div className="verdict-top-bar">
                     <span className="verdict-status-pill">{bannerStatus}</span>
-                    <span className="verdict-payout-pill">{result.compensation.amount_display}</span>
+                    <span className="verdict-payout-pill">
+                      {isUnder2h && liveSched?.delay_minutes
+                        ? `+${liveSched.delay_minutes}m Gate Delay`
+                        : result.compensation.amount_display}
+                    </span>
                   </div>
                   <h4 className="verdict-headline">{result.excuse_vs_truth.true_root_cause_title}</h4>
                   <p className="verdict-description">{result.excuse_vs_truth.true_root_cause_detail}</p>
@@ -768,7 +772,11 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
                   </div>
                   <div className="ev-card">
                     <span>5. Statutory Passenger Rights</span>
-                    <b style={{ color: isOnTime ? '#64748b' : 'var(--emerald)' }}>{result.compensation.amount_display}</b>
+                    <b style={{ color: isOnTime ? '#64748b' : 'var(--emerald)' }}>
+                      {isUnder2h && liveSched?.delay_minutes
+                        ? `+${liveSched.delay_minutes}m Delay (Care Only)`
+                        : result.compensation.amount_display}
+                    </b>
                     <small>{result.compensation.statute} · {result.compensation.regulator}</small>
                   </div>
                 </div>
@@ -797,17 +805,6 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
                   </div>
                 )}
 
-                {isUnder2h && (
-                  <div className="minor-delay-care-card">
-                    <span className="care-icon">☕</span>
-                    <div>
-                      <h4>Minor delay (+{liveSched?.delay_minutes || 30}m) — Airport care &amp; refreshments apply</h4>
-                      <p>
-                        Under airline passenger protection rules ({result.flight.regime_label}), cash compensation begins once delays reach 2–3+ hours. For delays under 2 hours, the airline is required to provide complimentary snacks, refreshments, and periodic gate updates.
-                      </p>
-                    </div>
-                  </div>
-                )}
 
                 {showClaimLetter && (
                   <div className="letter-box">
@@ -856,132 +853,100 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
                       </div>
                     </summary>
 
-                    {result.inbound_cascade?.has_inbound ? (
-                      <div className="inbound-rotation-alert">
-                        <div className="inbound-alert-header">
-                          <span className="inbound-beacon-dot" />
-                          <span className="inbound-alert-badge">DETECTOR 01 · 4-LEG ROTATION SLIP IDENTIFIED</span>
-                          <span className="inbound-delay-tag">+{result.inbound_cascade.inbound_delay_min}m Inbound Arrival Delay</span>
-                        </div>
-                        <p>{result.inbound_cascade.explanation}</p>
-                      </div>
-                    ) : (
-                      <div className="inbound-ontime-notice">
-                        <span className="notice-icon">✓</span>
-                        <p>
-                          <b>Prior Inbound Leg Landed On Time:</b> The aircraft arrived at {originCity} on schedule with zero incoming delay. Your subsequent delay occurred during ground turnaround, boarding, or departure operations at {originCity}, not from the previous flight.
-                        </p>
-                      </div>
-                    )}
+                    <div className="rotation-journey-flow">
+                      {result.rotation_legs.map((leg, idx) => {
+                        const schedDepTime = fmtTimeOnly(leg.sched_dep)
+                        const schedArrTime = fmtTimeOnly(leg.sched_arr)
+                        const actDepTime = fmtTimeOnly(leg.act_dep) || schedDepTime
+                        const actArrTime = fmtTimeOnly(leg.act_arr) || schedArrTime
+                        const dateDisplay = fmtDateReadable(leg.flight_date || leg.sched_dep || result.flight.flight_date)
 
-                    <div className="rotation-legs-body">
-                      <table className="legs-tbl">
-                        <thead>
-                          <tr>
-                            <th>Flight &amp; Sequence</th>
-                            <th>Flight Date</th>
-                            <th>Route</th>
-                            <th>Scheduled Times</th>
-                            <th>Actual Gate Times</th>
-                            <th>Delay Impact</th>
-                            <th>Turnaround &amp; Cause Analysis</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {result.rotation_legs.map((leg, idx) => {
-                            const isLate = leg.delay_min >= 15
-                            const schedDepTime = fmtTimeOnly(leg.sched_dep)
-                            const schedArrTime = fmtTimeOnly(leg.sched_arr)
-                            const actDepTime = fmtTimeOnly(leg.act_dep) || schedDepTime
-                            const actArrTime = fmtTimeOnly(leg.act_arr) || schedArrTime
-                            const dateDisplay = fmtDateReadable(leg.flight_date || leg.sched_dep || result.flight.flight_date)
+                        return (
+                          <Fragment key={leg.leg_index}>
+                            {idx === 1 && (
+                              <div className="turnaround-bridge-node">
+                                <div className="turnaround-bridge-pill">
+                                  <span className="turnaround-clock-icon">⏱</span>
+                                  <div className="turnaround-bridge-content">
+                                    <div className="turnaround-bridge-title">
+                                      Airport Ground Turnaround at <b>{originCity} ({result.flight.origin || 'Dep'})</b>
+                                    </div>
+                                    <div className="turnaround-bridge-desc">
+                                      {result.inbound_cascade?.has_inbound
+                                        ? `Aircraft arrived +${result.inbound_cascade.inbound_delay_min}m late from prior leg, compressing ground servicing window before boarding ${result.flight.flight_code}.`
+                                        : `Aircraft completed prior leg on schedule. Full standard ground turnaround servicing buffer available at gate.`}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
 
-                            return (
-                              <Fragment key={leg.leg_index}>
-                                {idx === 1 && (
-                                  <tr className="turnaround-connector-row">
-                                    <td colSpan={7}>
-                                      <div className="turnaround-connector-card">
-                                        <span className="connector-icon">⏱</span>
-                                        <div className="connector-text">
-                                          <b>Airport Ground Turnaround at {originCity} ({result.flight.origin || 'Dep'})</b>
-                                          <span>
-                                            {result.inbound_cascade?.has_inbound
-                                              ? `Aircraft arrived +${result.inbound_cascade.inbound_delay_min}m late from prior leg, compressing ground servicing buffer before boarding ${result.flight.flight_code}.`
-                                              : `Aircraft completed prior leg on schedule. Full standard ground servicing window available before boarding ${result.flight.flight_code}.`}
-                                          </span>
-                                        </div>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                )}
+                            <div className={`rotation-flow-card ${leg.is_inbound ? 'inbound-flow-card' : 'audited-flow-card'}`}>
+                              <div className="flow-card-head">
+                                <div className="flow-head-left">
+                                  <span className={`flow-leg-pill ${leg.is_inbound ? 'inbound' : 'audited'}`}>
+                                    {leg.is_inbound ? 'PREVIOUS FLIGHT · INCOMING LEG' : 'YOUR FLIGHT · AUDITED JOURNEY'}
+                                  </span>
+                                  <div className="flow-code-title">
+                                    <h4>{leg.flight_code}</h4>
+                                    <span className="flow-date-tag">{dateDisplay}</span>
+                                  </div>
+                                </div>
+                                <div className="flow-head-right">
+                                  {leg.delay_min >= 15 ? (
+                                    <span className="flow-delay-tag delayed">+{leg.delay_min}m Delay</span>
+                                  ) : leg.delay_min > 0 ? (
+                                    <span className="flow-delay-tag taxi">+{leg.delay_min}m Taxi Time</span>
+                                  ) : (
+                                    <span className="flow-delay-tag ontime">On Schedule</span>
+                                  )}
+                                </div>
+                              </div>
 
-                                <tr className={leg.is_inbound ? 'inbound-leg-row' : (isLate ? 'late' : '')}>
-                                  <td className="num">
-                                    <div className="leg-seq-badge-wrap">
-                                      <span className={`leg-code-badge ${leg.is_inbound ? 'inbound' : 'audited'}`}>
-                                        {leg.is_inbound ? 'PREVIOUS FLIGHT' : 'YOUR FLIGHT'}
-                                      </span>
-                                      <b className="leg-code-title">{leg.flight_code}</b>
-                                      <small className="leg-code-sub">{leg.is_inbound ? 'Earlier Leg' : 'Audited Trip'}</small>
+                              <div className="flow-card-body">
+                                <div className="flow-route-strip">
+                                  <div className="flow-station origin">
+                                    <b className="flow-iata">{leg.origin}</b>
+                                    <span className="flow-name">{leg.origin_name || leg.origin}</span>
+                                  </div>
+                                  <div className="flow-track">
+                                    <div className="flow-track-line" />
+                                    <span className="flow-track-plane">✈</span>
+                                  </div>
+                                  <div className="flow-station dest">
+                                    <b className="flow-iata">{leg.dest}</b>
+                                    <span className="flow-name">{leg.dest_name || leg.dest}</span>
+                                  </div>
+                                </div>
+
+                                <div className="flow-metrics-row">
+                                  <div className="flow-metric-item">
+                                    <span className="metric-lbl">Scheduled Times</span>
+                                    <span className="metric-val">{schedDepTime} Dep → {schedArrTime} Arr</span>
+                                  </div>
+                                  <div className="flow-metric-item">
+                                    <span className="metric-lbl">Actual Gate Times</span>
+                                    <span className="metric-val">{actDepTime} Push → {actArrTime} In</span>
+                                  </div>
+                                  {leg.takeoff_time && (
+                                    <div className="flow-metric-item radar">
+                                      <span className="metric-lbl">Radar Transponder</span>
+                                      <span className="metric-val">Wheels-up {fmtTimeOnly(leg.takeoff_time)} → ~{fmtTimeOnly(leg.touchdown_time || schedArrTime)}</span>
                                     </div>
-                                  </td>
-                                  <td>
-                                    <span className="leg-date-badge">{dateDisplay}</span>
-                                  </td>
-                                  <td>
-                                    <div className="leg-route-wrap">
-                                      <b className="leg-route-codes">{leg.route}</b>
-                                      <small className="leg-route-names">
-                                        {leg.origin_name || leg.origin} → {leg.dest_name || leg.dest}
-                                      </small>
-                                    </div>
-                                  </td>
-                                  <td className="num">
-                                    <div className="time-col">
-                                      <span><b>{schedDepTime}</b> Dep</span>
-                                      <span className="time-arrow">→</span>
-                                      <span><b>{schedArrTime}</b> Arr</span>
-                                    </div>
-                                  </td>
-                                  <td className="num">
-                                    <div className="time-col">
-                                      <span><b>{actDepTime}</b> Push</span>
-                                      <span className="time-arrow">→</span>
-                                      <span><b>{actArrTime}</b> In</span>
-                                    </div>
-                                    {leg.takeoff_time && (
-                                      <div className="radar-time-pill">
-                                        <span className="radar-dot" />
-                                        <span>Radar: {fmtTimeOnly(leg.takeoff_time)} → ~{fmtTimeOnly(leg.touchdown_time || schedArrTime)}</span>
-                                      </div>
-                                    )}
-                                  </td>
-                                  <td>
-                                    {leg.delay_min > 0 ? (
-                                      <div className="delay-pill-stack">
-                                        <span className="delay-badge">+{leg.delay_min} min</span>
-                                        <small className="delay-sub-text">{leg.is_inbound ? 'Delayed Turnaround' : 'Gate Departure Delay'}</small>
-                                      </div>
-                                    ) : (
-                                      <div className="delay-pill-stack">
-                                        <span className="ontime-badge">On time</span>
-                                        <small className="delay-sub-text">{leg.is_inbound ? 'No Incoming Delay' : 'On Schedule'}</small>
-                                      </div>
-                                    )}
-                                  </td>
-                                  <td>
-                                    <div className="leg-cause-text">
-                                      <span className="cause-title">{leg.cause || (leg.is_inbound ? 'Prior Leg Arrival' : 'Current Flight Departure')}</span>
-                                      {leg.summary && <small className="cause-sub">{leg.summary}</small>}
-                                    </div>
-                                  </td>
-                                </tr>
-                              </Fragment>
-                            )
-                          })}
-                        </tbody>
-                      </table>
+                                  )}
+                                </div>
+
+                                <div className="flow-insight-row">
+                                  <span className="flow-insight-bullet">ℹ</span>
+                                  <span className="flow-insight-text">
+                                    <b>{leg.cause || (leg.is_inbound ? 'Incoming Flight' : 'Audited Departure')}:</b> {leg.summary}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </Fragment>
+                        )
+                      })}
                     </div>
                   </details>
                 )}

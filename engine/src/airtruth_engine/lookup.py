@@ -813,15 +813,16 @@ def fetch_inbound_aircraft_leg(
         dep_name_val = target_origin
         arr_name_val = target_dest
 
+    is_real_late = delay_m >= 15
     cause_desc = (
         f"Landed {delay_m}m late at {target_dest} (Inbound Delay)"
-        if delay_m > 0
-        else f"Landed on schedule at {target_dest}"
+        if is_real_late
+        else (f"Landed on schedule at {target_dest}" if delay_m <= 0 else f"Landed at {target_dest} (+{delay_m}m nominal taxi)")
     )
     summary_desc = (
         f"Aircraft {tail_num} arrived at {target_dest} (+{delay_m}m late) on prior flight {inbound_code}. "
         f"Turnaround servicing window was compressed, causing departure delay."
-        if delay_m > 0
+        if is_real_late
         else f"Aircraft {tail_num} touched down on-time at {target_dest} on prior flight {inbound_code}. "
         f"The incoming leg completed on schedule."
     )
@@ -1623,7 +1624,10 @@ def audit_flight(
     elif delay_status == "under_2h":
         delay_min = int((live_sched or {}).get("delay_minutes") or 90)
         amt = 0
-        amount_display = "Care Only (< 2h delay)"
+        if delay_min > 0:
+            amount_display = f"+{delay_min}m Delay (Under 2h Threshold)"
+        else:
+            amount_display = "Under 2h Delay · Care Only"
     elif delay_status == "unknown":
         delay_min = 0
         amt = statutory_amount(profile, distance_km, 215) if is_major_cash_charter else 0
@@ -1659,10 +1663,19 @@ def audit_flight(
         excuse_status = "ON_TIME"
         selective_wx_rebutted = False
     elif delay_status == "under_2h":
-        root_title = f"Under 2 Hours Late — Care Only ({phys_title})"
-        root_detail = (
-            f"{phys_detail}{in_flight_note} Legal threshold: under {statute_text}, delays under 2 hours qualify for airport refreshments and care while statutory cash payouts apply only at 3+ hours or cancellation."
-        )
+        gate_min = int((live_sched or {}).get("delay_minutes") or delay_min or 0)
+        if gate_min > 0:
+            root_title = f"Minor Gate Delay (+{gate_min}m) — {phys_title}"
+            root_detail = (
+                f"{phys_detail}{in_flight_note} Flight {fc} experienced a {gate_min}-minute gate departure delay. "
+                f"Under {statute_text}, statutory passenger compensation applies at 2–3+ hours or cancellation, while minor delays are governed by standard airline ground care."
+            )
+        else:
+            root_title = f"Delay Under 2 Hours — {phys_title}"
+            root_detail = (
+                f"{phys_detail}{in_flight_note} Flight {fc} was delayed under 2 hours. "
+                f"Under {statute_text}, statutory compensation applies at 2–3+ hours or cancellation."
+            )
         excuse_status = "UNDER_THRESHOLD"
     elif delay_status in ("over_3h", "2_to_3h"):
         root_title = phys_title
@@ -1840,7 +1853,7 @@ def audit_flight(
         if inbound_leg:
             inbound_leg["leg_index"] = 1
             rot_legs.append(inbound_leg)
-            if inbound_leg.get("delay_min", 0) > 0:
+            if inbound_leg.get("delay_min", 0) >= 15:
                 inbound_cascade_info = {
                     "has_inbound": True,
                     "inbound_flight": inbound_leg["flight_code"],

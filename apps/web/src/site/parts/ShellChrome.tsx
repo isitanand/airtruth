@@ -118,16 +118,53 @@ export function More({ href, label, children }: { href: string; label?: string; 
   return <a className="more" href={href}>{label ?? children ?? 'Read full audit'} <ArrowRight size={14} aria-hidden="true" /></a>
 }
 
-const FOOT: [string, [string, string][]][] = [
-  ['Flight Audit', [['Check Flight / PNR', '/lookup'], ['Product overview', '/'], ['3-airline radar demo', '/demos'], ['Audit method', '/method']]],
-  ['Carriers', [['IndiGo · DGCA', '/case-studies/indigo'], ['Delta · US DOT', '/case-studies/delta'], ['British Airways · EU261', '/case-studies/ba'], ['All audits', '/case-studies']]],
-  ['Verification', [['Architecture', '/built-by'], ['Charter rules', '/docs/config-reference'], ['REST API schema', '/docs/api-reference'], ['Privacy & signing', '/privacy']]],
-  ['Standards', [['EU Reg 261/2004', '/method'], ['US DOT 14 CFR §260', '/method'], ['Indian DGCA CAR §3', '/method']]],
+const FOOT_TREE: [string, [string, string][]][] = [
+  [
+    'AUDIT_ENGINE/',
+    [
+      ['Check Flight / PNR', '/lookup'],
+      ['Live Radar Scrubber', '/demos'],
+      ['5-Point Forensic Method', '/method'],
+      ['All Airline Audits', '/case-studies'],
+    ],
+  ],
+  [
+    'CARRIERS/',
+    [
+      ['IndiGo · DGCA CAR §3', '/case-studies/indigo'],
+      ['Delta · US DOT §260', '/case-studies/delta'],
+      ['British Airways · EU261', '/case-studies/ba'],
+      ['Commercial Fleet List', '/demos'],
+    ],
+  ],
+  [
+    'STANDARDS/',
+    [
+      ['EU Reg 261/2004', '/method'],
+      ['US DOT 14 CFR §260', '/method'],
+      ['Indian DGCA CAR §3', '/method'],
+      ['GACA Saudi Passenger Code', '/method'],
+    ],
+  ],
+  [
+    'VERIFICATION/',
+    [
+      ['System Architecture', '/built-by'],
+      ['Charter Rules & Config', '/docs/config-reference'],
+      ['REST API Schema', '/docs/api-reference'],
+      ['Privacy & SHA-256 Signing', '/privacy'],
+    ],
+  ],
 ]
 
 export function Footer({ children }: { children?: ReactNode }) {
   return (
-    <footer className="footer">
+    <footer className="footer footer-sui">
+      <div className="footer-ambient-horizon" aria-hidden="true" />
+      <div className="footer-ambient-pillars" aria-hidden="true">
+        <i /><i /><i /><i /><i /><i />
+      </div>
+
       <div className="footer-in">
         <div className="footer-brand">
           <Logo />
@@ -138,14 +175,26 @@ export function Footer({ children }: { children?: ReactNode }) {
             Check my flight <ArrowRight size={15} />
           </a>
         </div>
-        {FOOT.map(([head, items]) => (
-          <nav key={head} aria-label={head}>
-            <h2>{head}</h2>
-            <ul>{items.map(([l, h]) => <li key={l}><a href={h}>{l}</a></li>)}</ul>
+
+        {FOOT_TREE.map(([head, items]) => (
+          <nav key={head} className="footer-tree-col" aria-label={head}>
+            <h2 className="tree-head">{head}</h2>
+            <ul className="tree-list">
+              {items.map(([l, h], idx) => (
+                <li key={l} className="tree-item">
+                  <span className="tree-branch" aria-hidden="true">
+                    {idx === items.length - 1 ? '└──' : '├──'}
+                  </span>
+                  <a href={h} className="tree-link">{l}</a>
+                </li>
+              ))}
+            </ul>
           </nav>
         ))}
       </div>
+
       {children}
+
       <div className="footer-base">
         <p className="footer-note">
           <strong>AIRTRUTH</strong> &middot; Carrier app replicas (IndiGo, Delta, British Airways) are concept telemetry sandboxes for statutory passenger rights verification under DGCA CAR &sect;3, EU261, and US DOT 14 CFR &sect;260.
@@ -164,9 +213,10 @@ export function Footer({ children }: { children?: ReactNode }) {
           </div>
 
           <div className="footer-creator-card">
-            <span className="footer-creator-label">
-              Architected &amp; Built by <strong className="creator-name">Anand Choubey</strong>
-            </span>
+            <div className="creator-text-block">
+              <span className="creator-tag">Architected &amp; Built by</span>
+              <span className="creator-name-bold">Anand Choubey</span>
+            </div>
             <div className="footer-creator-actions">
               <a
                 href="https://anandchoubey.is-a.dev/"

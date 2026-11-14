@@ -250,6 +250,7 @@ class LookupReq(BaseModel):
         "auto", "weather", "atc", "crew", "technical", "late_aircraft", "security", "overbooking", "none"
     ] = "auto"
     delay_status: Literal["unknown", "on_time", "under_2h", "2_to_3h", "over_3h", "cancelled"] = "unknown"
+    trace_inbound: bool = False
 
 
 @app.post("/v1/flights/lookup")
@@ -262,6 +263,7 @@ def lookup_flight(req: LookupReq):
         dest_hint=req.dest,
         claimed_reason=req.claimed_reason,
         delay_status=req.delay_status,
+        trace_inbound=req.trace_inbound,
     )
 
 

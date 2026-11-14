@@ -91,8 +91,17 @@ export interface LookupResult {
     true_root_cause_title: string
     true_root_cause_detail: string
   }
+  inbound_cascade?: {
+    has_inbound: boolean
+    inbound_flight: string
+    inbound_route: string
+    inbound_delay_min: number
+    inbound_arrival: string
+    explanation: string
+  } | null
   rotation_legs: {
     leg_index: number
+    is_inbound?: boolean
     flight_code: string
     route: string
     sched_dep?: string
@@ -207,6 +216,34 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
   const [flashKey, setFlashKey] = useState(0)
   const [copiedLetter, setCopiedLetter] = useState(false)
   const [copiedJson, setCopiedJson] = useState(false)
+  const [deepInboundLoading, setDeepInboundLoading] = useState(false)
+
+  const traceDeepInbound = async () => {
+    if (!result) return
+    setDeepInboundLoading(true)
+    try {
+      const res = await fetch('/v1/flights/lookup', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          query: result.flight.flight_code,
+          flight_date: result.flight.flight_date || undefined,
+          origin: result.flight.origin || undefined,
+          dest: result.flight.dest || undefined,
+          claimed_reason: claimed,
+          delay_status: delayStatus,
+          trace_inbound: true,
+        }),
+      })
+      if (!res.ok) throw new Error('Could not trace inbound leg')
+      const data = (await res.json()) as LookupResult
+      setResult(data)
+    } catch {
+      // Keep existing
+    } finally {
+      setDeepInboundLoading(false)
+    }
+  }
 
   const runLookup = useCallback(async (
     overrideQuery?: string,
@@ -767,12 +804,39 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
                       <div className="summary-left">
                         <span className="summary-icon">✈</span>
                         <div>
-                          <b>Aircraft Turnaround &amp; Journey History ({result.flight.tail_number})</b>
-                          <small>{result.flight.aircraft_model || result.flight.aircraft_type || 'Aircraft'} sequence of flight legs</small>
+                          <b>Aircraft Turnaround &amp; Journey History <span className="tail-mono">({result.flight.tail_number})</span></b>
+                          <small>{result.flight.aircraft_model || result.flight.aircraft_type || 'Aircraft'} sequence of flight legs · Inbound propagation audit</small>
                         </div>
                       </div>
-                      <span className="summary-badge">{result.rotation_legs.length} {result.rotation_legs.length === 1 ? 'Leg Tracked' : 'Legs Tracked'}</span>
+                      <div className="summary-actions">
+                        <span className="summary-badge">{result.rotation_legs.length} {result.rotation_legs.length === 1 ? 'Leg Tracked' : 'Legs Tracked'}</span>
+                        <button
+                          type="button"
+                          className="btn-deep-inbound"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            traceDeepInbound()
+                          }}
+                          disabled={deepInboundLoading}
+                          title="Trace inbound flight arriving before gate departure"
+                        >
+                          {deepInboundLoading ? 'Scanning...' : '⚡ Trace Inbound Leg'}
+                        </button>
+                      </div>
                     </summary>
+
+                    {result.inbound_cascade?.has_inbound && (
+                      <div className="inbound-rotation-alert">
+                        <div className="inbound-alert-header">
+                          <span className="inbound-beacon-dot" />
+                          <span className="inbound-alert-badge">DETECTOR 01 · 4-LEG ROTATION SLIP</span>
+                          <span className="inbound-delay-tag">+{result.inbound_cascade.inbound_delay_min}m Inbound Arrival Delay</span>
+                        </div>
+                        <p>{result.inbound_cascade.explanation}</p>
+                      </div>
+                    )}
+
                     <div className="rotation-legs-body">
                       <table className="legs-tbl">
                         <thead>
@@ -794,18 +858,25 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
                             const actArr = leg.act_arr ? (leg.act_arr.includes(' ') ? leg.act_arr.split(' ')[1] : leg.act_arr) : schedArr
 
                             return (
-                              <tr key={leg.leg_index} className={isLate ? 'late' : ''}>
+                              <tr key={leg.leg_index} className={leg.is_inbound ? 'inbound-leg-row' : (isLate ? 'late' : '')}>
                                 <td className="num">
-                                  <span className="leg-code-badge">#{leg.leg_index} {leg.flight_code}</span>
+                                  <span className={`leg-code-badge ${leg.is_inbound ? 'inbound' : 'audited'}`}>
+                                    {leg.is_inbound ? `#${leg.leg_index} INBOUND` : `#${leg.leg_index} AUDITED`} · {leg.flight_code}
+                                  </span>
                                 </td>
-                                <td><b>{leg.route}</b></td>
-                                <td className="num">{schedDep} → {schedArr}</td>
+                                <td>
+                                  <span className="route-tag">
+                                    <b>{leg.route}</b>
+                                  </span>
+                                </td>
+                                <td className="num"><span className="time-val">{schedDep} → {schedArr}</span></td>
                                 <td className="num">
-                                  <span>{actDep} → {actArr}</span>
+                                  <span className="time-val-bold">{actDep} → {actArr}</span>
                                   {leg.takeoff_time && (
-                                    <small style={{ display: 'block', color: 'var(--acc)', fontSize: '11px', marginTop: '2px' }}>
-                                      Takeoff {leg.takeoff_time} · Touchdown ~{leg.touchdown_time || schedArr}
-                                    </small>
+                                    <div className="radar-time-pill">
+                                      <span className="radar-dot" />
+                                      <span>Takeoff {leg.takeoff_time} · Touchdown ~{leg.touchdown_time || schedArr}</span>
+                                    </div>
                                   )}
                                 </td>
                                 <td>
@@ -817,8 +888,8 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
                                 </td>
                                 <td>
                                   <div className="leg-cause-text">
-                                    <span>{leg.cause || 'Nominal Turnaround'}</span>
-                                    {leg.summary && <small>{leg.summary}</small>}
+                                    <span className="cause-title">{leg.cause || 'Nominal Turnaround'}</span>
+                                    {leg.summary && <small className="cause-sub">{leg.summary}</small>}
                                   </div>
                                 </td>
                               </tr>

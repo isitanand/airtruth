@@ -162,7 +162,7 @@ export function Footer({ children }: { children?: ReactNode }) {
     <footer className="footer footer-sui">
       <div className="footer-ambient-horizon" aria-hidden="true" />
       <div className="footer-ambient-pillars" aria-hidden="true">
-        <i /><i /><i /><i /><i /><i />
+        <i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i /><i />
       </div>
 
       <div className="footer-in">

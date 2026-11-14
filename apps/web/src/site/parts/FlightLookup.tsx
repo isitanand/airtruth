@@ -1,5 +1,5 @@
 import { Check, Copy, Download, FileText, Plane, Search } from 'lucide-react'
-import { useCallback, useState } from 'react'
+import { Fragment, useCallback, useState } from 'react'
 import { Cols } from './ShellChrome'
 
 type DelayStatus = 'unknown' | 'on_time' | 'under_2h' | '2_to_3h' | 'over_3h' | 'cancelled'
@@ -104,6 +104,11 @@ export interface LookupResult {
     is_inbound?: boolean
     flight_code: string
     route: string
+    origin?: string
+    dest?: string
+    origin_name?: string | null
+    dest_name?: string | null
+    flight_date?: string | null
     sched_dep?: string
     act_dep?: string
     takeoff_time?: string | null
@@ -201,6 +206,31 @@ const SAMPLES = [
     reason: 'auto' as ClaimedReason,
   },
 ]
+
+function fmtDateReadable(dateStr?: string | null): string {
+  if (!dateStr || dateStr === 'N/A') return 'Date N/A'
+  const clean = dateStr.includes(' ') ? dateStr.split(' ')[0] : dateStr
+  try {
+    const parts = clean.split('-')
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10)
+      const month = parseInt(parts[1], 10) - 1
+      const day = parseInt(parts[2], 10)
+      const d = new Date(year, month, day)
+      if (!isNaN(d.getTime())) {
+        return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+      }
+    }
+  } catch {
+    /* fallback */
+  }
+  return clean
+}
+
+function fmtTimeOnly(val?: string | null): string {
+  if (!val || val === 'N/A') return 'N/A'
+  return val.includes(' ') ? val.split(' ')[1] : val
+}
 
 export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery?: string; id?: string }) {
   const [inputMode, setInputMode] = useState<'flight' | 'pnr'>('flight')
@@ -804,8 +834,8 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
                       <div className="summary-left">
                         <span className="summary-icon">✈</span>
                         <div>
-                          <b>Aircraft Turnaround &amp; Journey History <span className="tail-mono">({result.flight.tail_number})</span></b>
-                          <small>{result.flight.aircraft_model || result.flight.aircraft_type || 'Aircraft'} sequence of flight legs · Inbound propagation audit</small>
+                          <b>Aircraft Rotation &amp; Prior Leg History <span className="tail-mono">({result.flight.tail_number})</span></b>
+                          <small>{result.flight.aircraft_model || result.flight.aircraft_type || 'Aircraft'} rotation audit · Traces incoming flight arrival before your gate opened</small>
                         </div>
                       </div>
                       <div className="summary-actions">
@@ -821,19 +851,26 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
                           disabled={deepInboundLoading}
                           title="Trace inbound flight arriving before gate departure"
                         >
-                          {deepInboundLoading ? 'Scanning...' : '⚡ Trace Inbound Leg'}
+                          {deepInboundLoading ? 'Tracing...' : 'Trace Inbound Leg'}
                         </button>
                       </div>
                     </summary>
 
-                    {result.inbound_cascade?.has_inbound && (
+                    {result.inbound_cascade?.has_inbound ? (
                       <div className="inbound-rotation-alert">
                         <div className="inbound-alert-header">
                           <span className="inbound-beacon-dot" />
-                          <span className="inbound-alert-badge">DETECTOR 01 · 4-LEG ROTATION SLIP</span>
+                          <span className="inbound-alert-badge">DETECTOR 01 · 4-LEG ROTATION SLIP IDENTIFIED</span>
                           <span className="inbound-delay-tag">+{result.inbound_cascade.inbound_delay_min}m Inbound Arrival Delay</span>
                         </div>
                         <p>{result.inbound_cascade.explanation}</p>
+                      </div>
+                    ) : (
+                      <div className="inbound-ontime-notice">
+                        <span className="notice-icon">✓</span>
+                        <p>
+                          <b>Prior Inbound Leg Landed On Time:</b> The aircraft arrived at {originCity} on schedule with zero incoming delay. Your subsequent delay occurred during ground turnaround, boarding, or departure operations at {originCity}, not from the previous flight.
+                        </p>
                       </div>
                     )}
 
@@ -841,58 +878,106 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
                       <table className="legs-tbl">
                         <thead>
                           <tr>
-                            <th>Flight</th>
+                            <th>Flight &amp; Sequence</th>
+                            <th>Flight Date</th>
                             <th>Route</th>
-                            <th>Scheduled Time</th>
-                            <th>Gate Pushback &amp; Takeoff</th>
-                            <th>Gate Delay</th>
-                            <th>Turnaround &amp; Status</th>
+                            <th>Scheduled Times</th>
+                            <th>Actual Gate Times</th>
+                            <th>Delay Impact</th>
+                            <th>Turnaround &amp; Cause Analysis</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {result.rotation_legs.map((leg) => {
+                          {result.rotation_legs.map((leg, idx) => {
                             const isLate = leg.delay_min >= 15
-                            const schedDep = leg.sched_dep ? (leg.sched_dep.includes(' ') ? leg.sched_dep.split(' ')[1] : leg.sched_dep) : 'N/A'
-                            const schedArr = leg.sched_arr ? (leg.sched_arr.includes(' ') ? leg.sched_arr.split(' ')[1] : leg.sched_arr) : 'N/A'
-                            const actDep = leg.act_dep ? (leg.act_dep.includes(' ') ? leg.act_dep.split(' ')[1] : leg.act_dep) : schedDep
-                            const actArr = leg.act_arr ? (leg.act_arr.includes(' ') ? leg.act_arr.split(' ')[1] : leg.act_arr) : schedArr
+                            const schedDepTime = fmtTimeOnly(leg.sched_dep)
+                            const schedArrTime = fmtTimeOnly(leg.sched_arr)
+                            const actDepTime = fmtTimeOnly(leg.act_dep) || schedDepTime
+                            const actArrTime = fmtTimeOnly(leg.act_arr) || schedArrTime
+                            const dateDisplay = fmtDateReadable(leg.flight_date || leg.sched_dep || result.flight.flight_date)
 
                             return (
-                              <tr key={leg.leg_index} className={leg.is_inbound ? 'inbound-leg-row' : (isLate ? 'late' : '')}>
-                                <td className="num">
-                                  <span className={`leg-code-badge ${leg.is_inbound ? 'inbound' : 'audited'}`}>
-                                    {leg.is_inbound ? `#${leg.leg_index} INBOUND` : `#${leg.leg_index} AUDITED`} · {leg.flight_code}
-                                  </span>
-                                </td>
-                                <td>
-                                  <span className="route-tag">
-                                    <b>{leg.route}</b>
-                                  </span>
-                                </td>
-                                <td className="num"><span className="time-val">{schedDep} → {schedArr}</span></td>
-                                <td className="num">
-                                  <span className="time-val-bold">{actDep} → {actArr}</span>
-                                  {leg.takeoff_time && (
-                                    <div className="radar-time-pill">
-                                      <span className="radar-dot" />
-                                      <span>Takeoff {leg.takeoff_time} · Touchdown ~{leg.touchdown_time || schedArr}</span>
+                              <Fragment key={leg.leg_index}>
+                                {idx === 1 && (
+                                  <tr className="turnaround-connector-row">
+                                    <td colSpan={7}>
+                                      <div className="turnaround-connector-card">
+                                        <span className="connector-icon">⏱</span>
+                                        <div className="connector-text">
+                                          <b>Airport Ground Turnaround at {originCity} ({result.flight.origin || 'Dep'})</b>
+                                          <span>
+                                            {result.inbound_cascade?.has_inbound
+                                              ? `Aircraft arrived +${result.inbound_cascade.inbound_delay_min}m late from prior leg, compressing ground servicing buffer before boarding ${result.flight.flight_code}.`
+                                              : `Aircraft completed prior leg on schedule. Full standard ground servicing window available before boarding ${result.flight.flight_code}.`}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                )}
+
+                                <tr className={leg.is_inbound ? 'inbound-leg-row' : (isLate ? 'late' : '')}>
+                                  <td className="num">
+                                    <div className="leg-seq-badge-wrap">
+                                      <span className={`leg-code-badge ${leg.is_inbound ? 'inbound' : 'audited'}`}>
+                                        {leg.is_inbound ? 'PREVIOUS FLIGHT' : 'YOUR FLIGHT'}
+                                      </span>
+                                      <b className="leg-code-title">{leg.flight_code}</b>
+                                      <small className="leg-code-sub">{leg.is_inbound ? 'Earlier Leg' : 'Audited Trip'}</small>
                                     </div>
-                                  )}
-                                </td>
-                                <td>
-                                  {leg.delay_min > 0 ? (
-                                    <span className="delay-badge">+{leg.delay_min} min</span>
-                                  ) : (
-                                    <span className="ontime-badge">On time</span>
-                                  )}
-                                </td>
-                                <td>
-                                  <div className="leg-cause-text">
-                                    <span className="cause-title">{leg.cause || 'Nominal Turnaround'}</span>
-                                    {leg.summary && <small className="cause-sub">{leg.summary}</small>}
-                                  </div>
-                                </td>
-                              </tr>
+                                  </td>
+                                  <td>
+                                    <span className="leg-date-badge">{dateDisplay}</span>
+                                  </td>
+                                  <td>
+                                    <div className="leg-route-wrap">
+                                      <b className="leg-route-codes">{leg.route}</b>
+                                      <small className="leg-route-names">
+                                        {leg.origin_name || leg.origin} → {leg.dest_name || leg.dest}
+                                      </small>
+                                    </div>
+                                  </td>
+                                  <td className="num">
+                                    <div className="time-col">
+                                      <span><b>{schedDepTime}</b> Dep</span>
+                                      <span className="time-arrow">→</span>
+                                      <span><b>{schedArrTime}</b> Arr</span>
+                                    </div>
+                                  </td>
+                                  <td className="num">
+                                    <div className="time-col">
+                                      <span><b>{actDepTime}</b> Push</span>
+                                      <span className="time-arrow">→</span>
+                                      <span><b>{actArrTime}</b> In</span>
+                                    </div>
+                                    {leg.takeoff_time && (
+                                      <div className="radar-time-pill">
+                                        <span className="radar-dot" />
+                                        <span>Radar: {fmtTimeOnly(leg.takeoff_time)} → ~{fmtTimeOnly(leg.touchdown_time || schedArrTime)}</span>
+                                      </div>
+                                    )}
+                                  </td>
+                                  <td>
+                                    {leg.delay_min > 0 ? (
+                                      <div className="delay-pill-stack">
+                                        <span className="delay-badge">+{leg.delay_min} min</span>
+                                        <small className="delay-sub-text">{leg.is_inbound ? 'Delayed Turnaround' : 'Gate Departure Delay'}</small>
+                                      </div>
+                                    ) : (
+                                      <div className="delay-pill-stack">
+                                        <span className="ontime-badge">On time</span>
+                                        <small className="delay-sub-text">{leg.is_inbound ? 'No Incoming Delay' : 'On Schedule'}</small>
+                                      </div>
+                                    )}
+                                  </td>
+                                  <td>
+                                    <div className="leg-cause-text">
+                                      <span className="cause-title">{leg.cause || (leg.is_inbound ? 'Prior Leg Arrival' : 'Current Flight Departure')}</span>
+                                      {leg.summary && <small className="cause-sub">{leg.summary}</small>}
+                                    </div>
+                                  </td>
+                                </tr>
+                              </Fragment>
                             )
                           })}
                         </tbody>

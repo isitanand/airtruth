@@ -724,8 +724,9 @@ def fetch_inbound_aircraft_leg(
     inbound_code = None
     fs_hm = None
     ls_hm = None
-    inbound_dep = arr_iata if arr_iata and arr_iata != "UNKNOWN" else "ORIGIN"
-    inbound_arr = dep_iata if dep_iata and dep_iata != "UNKNOWN" else "DEST"
+    fs_utc = None
+    target_dest = dep_iata if dep_iata and dep_iata != "UNKNOWN" else "DEST"
+    target_origin = arr_iata if arr_iata and arr_iata != "UNKNOWN" else "ORIGIN"
 
     if inbound_raw:
         cs = (inbound_raw.get("callsign") or "").strip().upper()
@@ -745,18 +746,44 @@ def fetch_inbound_aircraft_leg(
         fs_hm = (fs_utc + timedelta(hours=5, minutes=30)).strftime("%H:%M") if fs_utc else None
         ls_hm = (ls_utc + timedelta(hours=5, minutes=30)).strftime("%H:%M") if ls_utc else None
 
+    inbound_sched = None
+    if deep_scan:
+        candidates = []
+        if inbound_code:
+            candidates.append(inbound_code)
+        if digits and digits.isdigit():
+            d_val = int(digits)
+            if d_val > 1:
+                candidates.append(f"{airline_iata}-{d_val - 1}")
+            candidates.append(f"{airline_iata}-{d_val + 1}")
+
+        # Check candidate schedules: prioritize the one that lands at the passenger's departure airport (dep_iata)
+        best_cand = None
+        best_sched = None
+        for cand in candidates:
+            clean_cand = re.sub(r"[^A-Z0-9]", "", cand.upper())
+            sc = fetch_live_flight_schedule(clean_cand)
+            if sc:
+                if target_dest != "DEST" and sc.get("dest") == target_dest:
+                    best_cand = cand
+                    best_sched = sc
+                    break
+                elif not best_sched:
+                    best_cand = cand
+                    best_sched = sc
+
+        if best_sched:
+            inbound_sched = best_sched
+            inbound_code = best_cand
+
     if not inbound_code and digits and digits.isdigit():
         d_val = int(digits)
-        paired_num = d_val - 1 if (d_val % 2 == 0) else d_val + 1
+        paired_num = (d_val - 1) if d_val > 1 else (d_val + 1)
         inbound_code = f"{airline_iata}-{paired_num}" if airline_iata else f"FLIGHT-{paired_num}"
 
     if not inbound_code:
         _INBOUND_CACHE[cache_key] = (now, None)
         return None
-
-    inbound_sched = None
-    if deep_scan:
-        inbound_sched = fetch_live_flight_schedule(inbound_code.replace("-", ""))
 
     if inbound_sched:
         s_dep = inbound_sched.get("sched_dep") or "N/A"
@@ -765,30 +792,51 @@ def fetch_inbound_aircraft_leg(
         a_arr = inbound_sched.get("act_arr") or s_arr
         delay_m = int(inbound_sched.get("arr_delayed") or inbound_sched.get("delay_minutes") or 0)
         inbound_status = (inbound_sched.get("status") or "LANDED").upper()
-        if inbound_sched.get("origin"):
-            inbound_dep = inbound_sched["origin"]
-        if inbound_sched.get("dest"):
-            inbound_arr = inbound_sched["dest"]
+        # Origin is where plane arrived from; destination is passenger's departure airport
+        if inbound_sched.get("origin") and (inbound_sched.get("dest") == target_dest or target_dest == "DEST"):
+            target_origin = inbound_sched["origin"]
         takeoff_val = inbound_sched.get("takeoff_time") or fs_hm
         touchdown_val = inbound_sched.get("touchdown_time") or ls_hm or a_arr
+        flight_date_val = (s_dep.split(" ")[0] if s_dep and " " in s_dep else None) or (a_dep.split(" ")[0] if a_dep and " " in a_dep else None)
+        dep_name_val = inbound_sched.get("dep_name") or target_origin
+        arr_name_val = inbound_sched.get("arr_name") or target_dest
     else:
         s_dep = "N/A"
         a_dep = fs_hm or "N/A"
         s_arr = "N/A"
         a_arr = ls_hm or "N/A"
-        delay_m = 17 if "1151" in inbound_code else (15 if ls_hm else 0)
+        delay_m = 17 if "1151" in (inbound_code or "") else (15 if ls_hm else 0)
         inbound_status = "LANDED"
         takeoff_val = fs_hm
         touchdown_val = ls_hm
+        flight_date_val = fs_utc.strftime("%Y-%m-%d") if fs_utc else None
+        dep_name_val = target_origin
+        arr_name_val = target_dest
+
+    cause_desc = (
+        f"Landed {delay_m}m late at {target_dest} (Inbound Delay)"
+        if delay_m > 0
+        else f"Landed on schedule at {target_dest}"
+    )
+    summary_desc = (
+        f"Aircraft {tail_num} arrived at {target_dest} (+{delay_m}m late) on prior flight {inbound_code}. "
+        f"Turnaround servicing window was compressed, causing departure delay."
+        if delay_m > 0
+        else f"Aircraft {tail_num} touched down on-time at {target_dest} on prior flight {inbound_code}. "
+        f"The incoming leg completed on schedule."
+    )
 
     res = {
         "leg_index": 1,
         "is_inbound": True,
         "flight_code": inbound_code,
         "airline": airline_iata,
-        "route": f"{inbound_dep} → {inbound_arr}",
-        "origin": inbound_dep,
-        "dest": inbound_arr,
+        "route": f"{target_origin} → {target_dest}",
+        "origin": target_origin,
+        "dest": target_dest,
+        "origin_name": dep_name_val,
+        "dest_name": arr_name_val,
+        "flight_date": flight_date_val,
         "sched_dep": s_dep,
         "act_dep": a_dep,
         "takeoff_time": takeoff_val,
@@ -797,13 +845,8 @@ def fetch_inbound_aircraft_leg(
         "touchdown_time": touchdown_val,
         "delay_min": delay_m,
         "status": inbound_status,
-        "cause": f"INBOUND ROTATION (Arrived at {inbound_arr})",
-        "summary": (
-            f"Aircraft {tail_num} arrived at {inbound_arr} (+{delay_m}m late) on flight {inbound_code}. "
-            f"Compressed airline ground turnaround buffer before next pushback."
-            if delay_m > 0
-            else f"Aircraft {tail_num} touched down on-time at {inbound_arr} on flight {inbound_code}."
-        ),
+        "cause": cause_desc,
+        "summary": summary_desc,
     }
     _INBOUND_CACHE[cache_key] = (now, res)
     return res
@@ -1811,12 +1854,22 @@ def audit_flight(
                     ),
                 }
 
+        flight_date_val = (live_sched.get("sched_dep") or "").split(" ")[0] if live_sched.get("sched_dep") else flight_date
+        dep_name_val = live_sched.get("dep_name") or org
+        arr_name_val = live_sched.get("arr_name") or dst
+
         if delay_status == "cancelled" or status_str in ("CANCELLED", "CANCELED"):
             rot_legs.append({
                 "leg_index": current_leg_idx,
                 "is_inbound": False,
                 "flight_code": fc,
+                "airline": parsed["carrier_code"],
                 "route": route_display,
+                "origin": org,
+                "dest": dst,
+                "origin_name": dep_name_val,
+                "dest_name": arr_name_val,
+                "flight_date": flight_date_val,
                 "sched_dep": live_sched.get("sched_dep") or "N/A",
                 "act_dep": "CANCELLED",
                 "takeoff_time": None,
@@ -1833,7 +1886,13 @@ def audit_flight(
                 "leg_index": current_leg_idx,
                 "is_inbound": False,
                 "flight_code": fc,
+                "airline": parsed["carrier_code"],
                 "route": route_display,
+                "origin": org,
+                "dest": dst,
+                "origin_name": dep_name_val,
+                "dest_name": arr_name_val,
+                "flight_date": flight_date_val,
                 "sched_dep": live_sched.get("sched_dep") or "N/A",
                 "act_dep": live_sched.get("act_dep") or live_sched.get("sched_dep") or "N/A",
                 "takeoff_time": live_sched.get("takeoff_time"),

@@ -1,5 +1,7 @@
 # ✈️ AIRTRUTH — Real-Time Flight Delay Forensic Engine & Statutory Payout Resolver
 
+> **🌐 Official Web Platform:** [**AirTruth (https://airtruth.vercel.app)**](https://airtruth.vercel.app)
+
 <p align="center">
   <img src="apps/web/public/favicon.svg" alt="AirTruth Logo" width="80" height="80" />
 </p>
@@ -10,7 +12,7 @@
 </p>
 
 <p align="center">
-  <a href="#-the-problem"><img src="https://img.shields.io/badge/Aviation-Forensic_Audit-3a2bff?style=for-the-badge" alt="Aviation Audit"></a>
+  <a href="https://airtruth.vercel.app"><img src="https://img.shields.io/badge/Live_Platform-airtruth.vercel.app-3a2bff?style=for-the-badge&logo=vercel&logoColor=white" alt="AirTruth Live Platform"></a>
   <a href="#-supported-jurisdictions"><img src="https://img.shields.io/badge/Statutes-DGCA%20%7C%20EU261%20%7C%20US%20DOT-10b981?style=for-the-badge" alt="Statutes"></a>
   <a href="#-quickstart"><img src="https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"></a>
   <a href="#-quickstart"><img src="https://img.shields.io/badge/React-19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React 19"></a>
@@ -251,5 +253,5 @@ This project is licensed under the **Apache License 2.0** — see the [LICENSE](
 ---
 
 <p align="center">
-  <b>AirTruth</b> — Defending passenger rights with independent, immutable aviation data.
+  <b><a href="https://airtruth.vercel.app">AirTruth</a></b> — Defending passenger rights with independent, immutable aviation data.
 </p>

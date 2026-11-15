@@ -2407,3 +2407,354 @@ main, .footer { overflow-x: clip; }
 .letter-box { padding: 18px 20px; border: 1px solid #dce2ea; border-radius: 8px; background: #f8fafc; display: grid; gap: 12px; }
 .letter-box pre { margin: 0; white-space: pre-wrap; font: 400 13.5px/1.6 var(--sans); color: var(--ink-2); max-height: 290px; overflow-y: auto; }
 @media (max-width: 980px) { .lookup-grid, .lookup-docs { grid-template-columns: 1fr; } .lookup-grid .span-2, .lookup-grid .span-3 { grid-column: auto; } }
+
+/* ==========================================================================
+   Comprehensive Mobile & Tablet Responsiveness Optimization
+   ========================================================================== */
+
+/* Tablets & Small Laptops (681px - 1024px) */
+@media (min-width: 681px) and (max-width: 1024px) {
+  .lookup-box {
+    padding: 22px 20px;
+  }
+  .lookup-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .lookup-grid .span-2,
+  .lookup-grid .span-3 {
+    grid-column: span 1 !important;
+  }
+  .ev-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .flow-stations-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Mobile & Phablets (< 680px) */
+@media (max-width: 680px) {
+  :root {
+    --pad: 12px;
+  }
+
+  /* Workbench card */
+  .lookup-box {
+    padding: 16px 12px;
+    border-radius: 10px;
+    margin-top: 20px;
+    gap: 16px;
+  }
+  .lookup-top {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding-bottom: 12px;
+  }
+  .lookup-tabs {
+    display: flex;
+    width: 100%;
+  }
+  .lookup-tabs button {
+    flex: 1;
+    justify-content: center;
+    padding: 8px 6px;
+    font-size: 11.5px;
+    white-space: nowrap;
+  }
+  .lookup-presets {
+    display: flex;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    gap: 6px;
+    padding-bottom: 6px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .lookup-presets::-webkit-scrollbar {
+    display: none;
+  }
+  .lookup-presets button {
+    flex-shrink: 0;
+    font-size: 11px;
+    padding: 6px 10px;
+    white-space: nowrap;
+  }
+  .lookup-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px;
+  }
+  .lookup-grid .span-2,
+  .lookup-grid .span-3 {
+    grid-column: auto !important;
+  }
+  .btn-lookup-hero {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 18px;
+    font-size: 14px;
+  }
+
+  /* Passenger Flight Header */
+  .passenger-flight-header {
+    padding: 14px 12px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .flight-brand-row {
+    gap: 10px;
+  }
+  .flight-code-badge {
+    font-size: 14px;
+    padding: 5px 10px;
+  }
+  .flight-title-group h3 {
+    font-size: 17px;
+  }
+  .flight-title-group p {
+    font-size: 12px;
+    line-height: 1.4;
+    word-break: break-word;
+  }
+  .flight-badges-group {
+    gap: 6px;
+    width: 100%;
+  }
+  .regime-pill,
+  .telemetry-pill {
+    font-size: 10.5px;
+    padding: 4px 8px;
+  }
+
+  /* Visual Verdict Card */
+  .verdict-card {
+    padding: 16px 14px;
+    gap: 8px;
+  }
+  .verdict-top-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .verdict-status-pill {
+    font-size: 10px;
+    padding: 4px 8px;
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .verdict-payout-pill {
+    font-size: 11.5px;
+    padding: 4px 10px;
+    align-self: flex-start;
+  }
+  .verdict-headline {
+    font-size: 16.5px;
+    line-height: 1.35;
+  }
+  .verdict-description {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  /* Timetable Hero Card */
+  .lookup-timetable-card {
+    padding: 14px 12px;
+    gap: 12px;
+  }
+  .timetable-main b {
+    font-size: 24px;
+  }
+  .timetable-mid {
+    padding: 4px 0;
+    width: 100%;
+    justify-items: center;
+  }
+  .timetable-line {
+    width: 100%;
+    margin: 6px 0;
+  }
+  .timetable-sub {
+    font-size: 12.5px;
+    gap: 6px;
+  }
+
+  /* Evidence Grid */
+  .ev-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px;
+  }
+  .ev-card {
+    padding: 12px 14px;
+    gap: 4px;
+  }
+  .ev-card span {
+    font-size: 10.5px;
+  }
+  .ev-card b {
+    font-size: 13.5px;
+  }
+
+  /* Proof & Rotation Details Card */
+  .proof-details-summary {
+    padding: 12px 12px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .summary-left {
+    gap: 10px;
+  }
+  .summary-icon {
+    width: 26px;
+    height: 26px;
+    font-size: 12px;
+  }
+  .summary-left b {
+    font-size: 13.5px;
+  }
+  .summary-left small {
+    font-size: 11.5px;
+  }
+  .summary-actions {
+    width: 100%;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .summary-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+  .btn-deep-inbound {
+    padding: 7px 14px;
+    font-size: 12.5px;
+  }
+
+  /* Rotation Journey Flow */
+  .rotation-journey-flow {
+    padding: 12px 8px 16px;
+    gap: 12px;
+  }
+  .rotation-flow-card {
+    padding: 14px 12px;
+    gap: 10px;
+  }
+  .flow-card-head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .flow-head-left {
+    gap: 6px;
+  }
+  .flow-code-title h4 {
+    font-size: 15px;
+  }
+  .flow-delay-tag {
+    align-self: flex-start;
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+
+  /* Route Strip on mobile */
+  .flow-route-strip {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+  .flow-iata {
+    font-size: 17px;
+  }
+  .flow-name {
+    font-size: 10px;
+    max-width: 80px;
+    line-height: 1.25;
+  }
+  .flow-track {
+    width: 48px;
+  }
+  .flow-track-plane {
+    font-size: 11px;
+    padding: 0 4px;
+  }
+
+  /* Stations Grid */
+  .flow-stations-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px;
+  }
+  .flow-station-card {
+    padding: 10px 12px;
+  }
+  .station-timing-item {
+    font-size: 11.5px;
+    padding: 4px 6px;
+  }
+
+  /* Turnaround bridge node */
+  .turnaround-bridge-pill {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  .turnaround-clock-icon {
+    font-size: 18px;
+  }
+  .turnaround-bridge-title {
+    font-size: 12.5px;
+  }
+  .turnaround-bridge-desc {
+    font-size: 11.5px;
+  }
+
+  /* Claim letter */
+  .case3-top {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .case3-top b {
+    font-size: 14.5px;
+  }
+  .btn-copy-letter {
+    width: 100%;
+    justify-content: center;
+  }
+  .letter-box pre {
+    font-size: 12px;
+    max-height: 220px;
+  }
+  .letter-instruction-bar {
+    padding: 8px 10px;
+    font-size: 12px;
+    gap: 6px;
+  }
+
+  /* Proof packet */
+  .packet-box {
+    padding: 12px 10px;
+  }
+  .packet-head b {
+    font-size: 17px;
+  }
+  .packet-amt {
+    font-size: 19px;
+  }
+}
+
+/* Extra small mobile (< 400px, e.g. iPhone SE, 360px phones) */
+@media (max-width: 400px) {
+  .flow-name {
+    display: none;
+  }
+  .flow-iata {
+    font-size: 16px;
+  }
+  .lookup-tabs button {
+    font-size: 10.5px;
+    padding: 6px 4px;
+  }
+  .flight-code-badge {
+    font-size: 13px;
+    padding: 4px 8px;
+  }
+}

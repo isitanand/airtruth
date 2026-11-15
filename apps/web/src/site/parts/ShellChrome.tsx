@@ -89,10 +89,12 @@ export function Nav({ path }: { path: string }) {
           </nav>
           <span className="sp" />
           <span className="label">ADS-B · METAR · EU261 / DOT / DGCA</span>
-          <a className="btn sm nav-cta" href="/lookup">Check my flight</a>
-          <button className="burger" aria-label={open ? 'Close menu' : 'Open menu'} aria-expanded={open} onClick={() => setOpen((o) => !o)}>
-            {open ? <X size={18} /> : <Menu size={18} />}
-          </button>
+          <div className="nav-actions">
+            <a className="btn sm nav-cta" href="/lookup">Check flight</a>
+            <button className="burger" aria-label={open ? 'Close menu' : 'Open menu'} aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+              {open ? <X size={18} /> : <Menu size={18} />}
+            </button>
+          </div>
         </div>
       </header>
       {open && (

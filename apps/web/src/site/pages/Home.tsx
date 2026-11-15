@@ -53,8 +53,8 @@ function Hero() {
         <Cols />
         <div className="hero-in">
           <h1 id="hero-title" className="display hero-title">
-            {line('Not', 0)}
-            {line('delayed by', 1)}
+            {line("It isn't", 0)}
+            {line('always the', 1)}
             {line('Weather.', 2, 'acc')}
           </h1>
           <div className="hero-rest">

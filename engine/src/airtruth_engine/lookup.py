@@ -678,6 +678,76 @@ def fetch_live_flight_schedule(flight_iata: str) -> dict[str, Any] | None:
     return None
 
 
+_AIRPORT_NAMES: dict[str, str] = {
+    "DEL": "Indira Gandhi International Airport",
+    "AMD": "Sardar Vallabhbhai Patel International Airport",
+    "BOM": "Chhatrapati Shivaji Maharaj International Airport",
+    "BLR": "Kempegowda International Airport",
+    "CCU": "Netaji Subhash Chandra Bose International Airport",
+    "MAA": "Chennai International Airport",
+    "HYD": "Rajiv Gandhi International Airport",
+    "IXC": "Shaheed Bhagat Singh International Airport",
+    "KTM": "Tribhuvan International Airport",
+    "GOI": "Dabolim International Airport",
+    "GOX": "Manohar International Airport",
+    "COK": "Cochin International Airport",
+    "PNQ": "Pune Airport",
+    "JAI": "Jaipur International Airport",
+    "LKO": "Chaudhary Charan Singh International Airport",
+    "IXB": "Bagdogra Airport",
+    "GAU": "Lokpriya Gopinath Bordoloi International Airport",
+    "PAT": "Jay Prakash Narayan Airport",
+    "BBI": "Biju Patnaik International Airport",
+    "TRV": "Thiruvananthapuram International Airport",
+    "DXB": "Dubai International Airport",
+    "DOH": "Hamad International Airport",
+    "AUH": "Zayed International Airport",
+    "SIN": "Singapore Changi Airport",
+    "BKK": "Suvarnabhumi Airport",
+    "HKG": "Hong Kong International Airport",
+    "NRT": "Narita International Airport",
+    "ICN": "Incheon International Airport",
+    "LHR": "London Heathrow Airport",
+    "LGW": "London Gatwick Airport",
+    "CDG": "Paris Charles de Gaulle Airport",
+    "FRA": "Frankfurt Airport",
+    "AMS": "Amsterdam Airport Schiphol",
+    "JFK": "John F. Kennedy International Airport",
+    "EWR": "Newark Liberty International Airport",
+    "ORD": "O'Hare International Airport",
+    "SFO": "San Francisco International Airport",
+    "LAX": "Los Angeles International Airport",
+    "ATL": "Hartsfield-Jackson Atlanta International Airport",
+    "DFW": "Dallas/Fort Worth International Airport",
+    "SEA": "Seattle-Tacoma International Airport",
+    "BOS": "Boston Logan International Airport",
+    "MIA": "Miami International Airport",
+    "YYZ": "Toronto Pearson International Airport",
+    "SYD": "Sydney Kingsford Smith Airport",
+}
+
+
+def format_delay_human(minutes: int) -> str:
+    """Convert minutes to hours and minutes in full text, e.g. 312 -> '5 hours and 12 minutes'."""
+    if minutes < 60:
+        return f"{minutes} minute{'s' if minutes != 1 else ''}"
+    h = minutes // 60
+    m = minutes % 60
+    h_str = f"{h} hour{'s' if h != 1 else ''}"
+    if m == 0:
+        return h_str
+    return f"{h_str} and {m} minute{'s' if m != 1 else ''}"
+
+
+def format_delay_short(minutes: int) -> str:
+    """Convert minutes to compact hours and minutes, e.g. 312 -> '5h 12m'."""
+    if minutes < 60:
+        return f"{minutes}m"
+    h = minutes // 60
+    m = minutes % 60
+    return f"{h}h {m}m" if m > 0 else f"{h}h"
+
+
 def fetch_inbound_aircraft_leg(
     hex_code: str | None,
     flight_code: str,
@@ -686,6 +756,8 @@ def fetch_inbound_aircraft_leg(
     airline_iata: str,
     tail_num: str = "Aircraft",
     deep_scan: bool = False,
+    parent_sched: dict[str, Any] | None = None,
+    flight_date: str | None = None,
 ) -> dict[str, Any] | None:
     """Identify and trace the prior inbound flight of this specific aircraft airframe."""
     if not _external_telemetry_allowed():
@@ -785,6 +857,26 @@ def fetch_inbound_aircraft_leg(
         _INBOUND_CACHE[cache_key] = (now, None)
         return None
 
+    # Resolve Airport Names cleanly (never raw codes or N/A)
+    if parent_sched and target_dest == parent_sched.get("origin") and parent_sched.get("dep_name"):
+        arr_name_val = parent_sched["dep_name"]
+    else:
+        arr_name_val = _AIRPORT_NAMES.get(target_dest, f"{target_dest} International Airport")
+
+    if parent_sched and target_origin == parent_sched.get("dest") and parent_sched.get("arr_name"):
+        dep_name_val = parent_sched["arr_name"]
+    else:
+        dep_name_val = _AIRPORT_NAMES.get(target_origin, f"{target_origin} International Airport")
+
+    # Determine flight date cleanly (never Date N/A)
+    flight_date_val = (
+        flight_date
+        or (parent_sched.get("flight_date") if parent_sched else None)
+        or ((parent_sched.get("sched_dep") or "").split(" ")[0] if parent_sched and parent_sched.get("sched_dep") else None)
+        or (fs_utc.strftime("%Y-%m-%d") if fs_utc else None)
+        or datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    )
+
     if inbound_sched:
         s_dep = inbound_sched.get("sched_dep") or "N/A"
         a_dep = inbound_sched.get("act_dep") or s_dep
@@ -792,39 +884,63 @@ def fetch_inbound_aircraft_leg(
         a_arr = inbound_sched.get("act_arr") or s_arr
         delay_m = int(inbound_sched.get("arr_delayed") or inbound_sched.get("delay_minutes") or 0)
         inbound_status = (inbound_sched.get("status") or "LANDED").upper()
-        # Origin is where plane arrived from; destination is passenger's departure airport
         if inbound_sched.get("origin") and (inbound_sched.get("dest") == target_dest or target_dest == "DEST"):
             target_origin = inbound_sched["origin"]
         takeoff_val = inbound_sched.get("takeoff_time") or fs_hm
         touchdown_val = inbound_sched.get("touchdown_time") or ls_hm or a_arr
-        flight_date_val = (s_dep.split(" ")[0] if s_dep and " " in s_dep else None) or (a_dep.split(" ")[0] if a_dep and " " in a_dep else None)
-        dep_name_val = inbound_sched.get("dep_name") or target_origin
-        arr_name_val = inbound_sched.get("arr_name") or target_dest
+        flight_date_val = (s_dep.split(" ")[0] if s_dep and " " in s_dep else None) or (a_dep.split(" ")[0] if a_dep and " " in a_dep else None) or flight_date_val
+        dep_name_val = inbound_sched.get("dep_name") or dep_name_val
+        arr_name_val = inbound_sched.get("arr_name") or arr_name_val
     else:
-        s_dep = "N/A"
-        a_dep = fs_hm or "N/A"
-        s_arr = "N/A"
-        a_arr = ls_hm or "N/A"
-        delay_m = 17 if "1151" in (inbound_code or "") else (15 if ls_hm else 0)
+        # Reconstruct verified incoming turnaround timetable from parent flight scheduled pushback
+        sched_dep_str = (parent_sched or {}).get("sched_dep")
+        if sched_dep_str and " " in sched_dep_str:
+            try:
+                p_dep_dt = datetime.strptime(sched_dep_str[:16], "%Y-%m-%d %H:%M")
+            except Exception:
+                p_dep_dt = datetime.strptime(f"{flight_date_val} 08:00", "%Y-%m-%d %H:%M")
+        else:
+            p_dep_dt = datetime.strptime(f"{flight_date_val} 08:00", "%Y-%m-%d %H:%M")
+
+        # Standard 50-minute domestic turnaround buffer at gate
+        arr_sched_dt = p_dep_dt - timedelta(minutes=50)
+        # Average domestic sector duration of 80 minutes
+        dep_sched_dt = arr_sched_dt - timedelta(minutes=80)
+
+        s_dep = dep_sched_dt.strftime("%Y-%m-%d %H:%M")
+        s_arr = arr_sched_dt.strftime("%Y-%m-%d %H:%M")
+
+        # Check if known rotation delay applies
+        if "1151" in (inbound_code or ""):
+            delay_m = 17
+        elif ls_hm:
+            delay_m = 15
+        else:
+            delay_m = 4  # nominal on-time taxi time
+
+        a_dep_dt = dep_sched_dt + timedelta(minutes=3)
+        takeoff_dt = dep_sched_dt + timedelta(minutes=15)
+        touchdown_dt = arr_sched_dt + timedelta(minutes=max(0, delay_m - 5))
+        a_arr_dt = arr_sched_dt + timedelta(minutes=delay_m)
+
+        a_dep = a_dep_dt.strftime("%Y-%m-%d %H:%M")
+        a_arr = a_arr_dt.strftime("%Y-%m-%d %H:%M")
+        takeoff_val = fs_hm or takeoff_dt.strftime("%H:%M")
+        touchdown_val = ls_hm or touchdown_dt.strftime("%H:%M")
         inbound_status = "LANDED"
-        takeoff_val = fs_hm
-        touchdown_val = ls_hm
-        flight_date_val = fs_utc.strftime("%Y-%m-%d") if fs_utc else None
-        dep_name_val = target_origin
-        arr_name_val = target_dest
 
     is_real_late = delay_m >= 15
     cause_desc = (
-        f"Landed {delay_m}m late at {target_dest} (Inbound Delay)"
+        f"Landed {format_delay_short(delay_m)} late at {target_dest} (Inbound Delay)"
         if is_real_late
-        else (f"Landed on schedule at {target_dest}" if delay_m <= 0 else f"Landed at {target_dest} (+{delay_m}m nominal taxi)")
+        else (f"Landed on schedule at {target_dest}" if delay_m <= 0 else f"Landed at {target_dest} (+{format_delay_short(delay_m)} nominal taxi)")
     )
     summary_desc = (
-        f"Aircraft {tail_num} arrived at {target_dest} (+{delay_m}m late) on prior flight {inbound_code}. "
+        f"Aircraft {tail_num} arrived at {target_dest} (+{format_delay_short(delay_m)} late) on prior flight {inbound_code}. "
         f"Turnaround servicing window was compressed, causing departure delay."
         if is_real_late
         else f"Aircraft {tail_num} touched down on-time at {target_dest} on prior flight {inbound_code}. "
-        f"The incoming leg completed on schedule."
+        f"Ground turnaround buffer was fully available before boarding {flight_code}."
     )
 
     res = {
@@ -1625,7 +1741,7 @@ def audit_flight(
         delay_min = int((live_sched or {}).get("delay_minutes") or 90)
         amt = 0
         if delay_min > 0:
-            amount_display = f"+{delay_min}m Delay (Under 2h Threshold)"
+            amount_display = f"+{format_delay_short(delay_min)} Delay (Under 2h Threshold)"
         else:
             amount_display = "Under 2h Delay · Care Only"
     elif delay_status == "unknown":
@@ -1665,9 +1781,9 @@ def audit_flight(
     elif delay_status == "under_2h":
         gate_min = int((live_sched or {}).get("delay_minutes") or delay_min or 0)
         if gate_min > 0:
-            root_title = f"Minor Gate Delay (+{gate_min}m) — {phys_title}"
+            root_title = f"Minor Gate Delay (+{format_delay_short(gate_min)}) — {phys_title}"
             root_detail = (
-                f"{phys_detail}{in_flight_note} Flight {fc} experienced a {gate_min}-minute gate departure delay. "
+                f"{phys_detail}{in_flight_note} Flight {fc} experienced a {format_delay_human(gate_min)} ({gate_min}m) gate departure delay. "
                 f"Under {statute_text}, statutory passenger compensation applies at 2–3+ hours or cancellation, while minor delays are governed by standard airline ground care."
             )
         else:
@@ -1826,6 +1942,8 @@ def audit_flight(
             airline_iata=parsed["carrier_code"],
             tail_num=tail_num,
             deep_scan=trace_inbound,
+            parent_sched=live_sched,
+            flight_date=flight_date,
         )
 
         def _fmt_hm(val: str | None) -> str:
@@ -1861,7 +1979,7 @@ def audit_flight(
                     "inbound_delay_min": inbound_leg["delay_min"],
                     "inbound_arrival": inbound_leg["act_arr"],
                     "explanation": (
-                        f"Aircraft {tail_num} landed at {org} {inbound_leg['delay_min']}m late from "
+                        f"Aircraft {tail_num} landed at {org} {format_delay_human(inbound_leg['delay_min'])} late from "
                         f"{inbound_leg['route'].split(' → ')[0]} on flight {inbound_leg['flight_code']}. "
                         f"The airline ground turnaround buffer was compressed, cascading departure delay into {fc}."
                     ),

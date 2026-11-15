@@ -232,6 +232,37 @@ function fmtTimeOnly(val?: string | null): string {
   return val.includes(' ') ? val.split(' ')[1] : val
 }
 
+export function fmtDelayBadge(mins?: number | null): string {
+  if (mins == null || mins === 0) return 'On time'
+  const abs = Math.abs(mins)
+  const sign = mins > 0 ? '+' : '-'
+  if (abs < 60) return `${sign}${abs}m`
+  const h = Math.floor(abs / 60)
+  const m = abs % 60
+  return m === 0 ? `${sign}${h}h` : `${sign}${h}h ${m}m`
+}
+
+export function fmtDelayWords(mins?: number | null): string {
+  if (mins == null || mins === 0) return '0 minutes'
+  const abs = Math.abs(mins)
+  if (abs < 60) return `${abs} minute${abs === 1 ? '' : 's'}`
+  const h = Math.floor(abs / 60)
+  const m = abs % 60
+  const hStr = `${h} hour${h === 1 ? '' : 's'}`
+  if (m === 0) return hStr
+  return `${hStr} and ${m} minute${m === 1 ? '' : 's'}`
+}
+
+export function fmtDelayFull(mins?: number | null): string {
+  if (mins == null || mins === 0) return 'On time'
+  const abs = Math.abs(mins)
+  const sign = mins > 0 ? '+' : '-'
+  if (abs < 60) return `${sign}${abs}m`
+  const h = Math.floor(abs / 60)
+  const m = abs % 60
+  return `${sign}${h}h ${m}m (${abs}m)`
+}
+
 export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery?: string; id?: string }) {
   const [inputMode, setInputMode] = useState<'flight' | 'pnr'>('flight')
   const [query, setQuery] = useState(initialQuery)
@@ -402,9 +433,9 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
     : isOnTime
       ? 'Flight On Time · No Claim Needed'
       : isUnder2h
-        ? (liveSched?.delay_minutes ? `Minor Gate Delay (+${liveSched.delay_minutes}m)` : 'Minor Delay · Standard Gate Timing')
+        ? (liveSched?.delay_minutes ? `Minor Gate Delay (+${fmtDelayBadge(liveSched.delay_minutes)})` : 'Minor Delay · Standard Gate Timing')
         : isSevereDelay
-          ? 'Severe Delay · Weather Excuse Questioned'
+          ? (liveSched?.delay_minutes ? `Severe Gate Delay (+${fmtDelayBadge(liveSched.delay_minutes)})` : 'Severe Delay · Weather Excuse Questioned')
           : 'Delay Status Checked'
   const fr24Slug = (result?.flight.flight_code ?? '').replace(/[^A-Z0-9]/gi, '').toLowerCase()
   const faSlug = (result?.flight.callsign ?? fr24Slug).toUpperCase()
@@ -570,7 +601,7 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
                     <span className="verdict-status-pill">{bannerStatus}</span>
                     <span className="verdict-payout-pill">
                       {isUnder2h && liveSched?.delay_minutes
-                        ? `+${liveSched.delay_minutes}m Gate Delay`
+                        ? `+${fmtDelayBadge(liveSched.delay_minutes)} Gate Delay`
                         : result.compensation.amount_display}
                     </span>
                   </div>
@@ -596,7 +627,7 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
                           <>
                             <span>Gate Pushback: <b>{liveSched.act_dep ? liveSched.act_dep.split(' ')[1] : 'N/A'}</b></span>
                             {liveSched.dep_delayed ? (
-                              <span className="delay-badge">+{liveSched.dep_delayed}m late</span>
+                              <span className="delay-badge">+{fmtDelayBadge(liveSched.dep_delayed)} late</span>
                             ) : (
                               <span className="ontime-badge">On time</span>
                             )}
@@ -657,7 +688,7 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
                       <small>
                         {isCancelled
                           ? 'Flight cancelled by carrier · Grounded'
-                          : (liveSched.delay_minutes ? `+${liveSched.delay_minutes} min gate delay` : 'Tracking on time') +
+                          : (liveSched.delay_minutes ? `+${fmtDelayWords(liveSched.delay_minutes)} gate delay (${liveSched.delay_minutes}m)` : 'Tracking on time') +
                             (liveSched.percent_flown != null ? ` · ${liveSched.percent_flown}% flown` : (statusStr === 'landed' ? ' · 100% flown' : ''))}
                       </small>
                     </div>
@@ -678,7 +709,7 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
                           <>
                             <span>Gate In (Est): <b>{liveSched.act_arr ? liveSched.act_arr.split(' ')[1] : 'N/A'}</b></span>
                             {liveSched.arr_delayed ? (
-                              <span className="delay-badge">+{liveSched.arr_delayed}m late</span>
+                              <span className="delay-badge">+{fmtDelayBadge(liveSched.arr_delayed)} late</span>
                             ) : (
                               <span className="ontime-badge">On time</span>
                             )}
@@ -774,7 +805,7 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
                     <span>5. Statutory Passenger Rights</span>
                     <b style={{ color: isOnTime ? '#64748b' : 'var(--emerald)' }}>
                       {isUnder2h && liveSched?.delay_minutes
-                        ? `+${liveSched.delay_minutes}m Delay (Care Only)`
+                        ? `+${fmtDelayBadge(liveSched.delay_minutes)} Delay (Care Only)`
                         : result.compensation.amount_display}
                     </b>
                     <small>{result.compensation.statute} · {result.compensation.regulator}</small>
@@ -848,7 +879,7 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
                           disabled={deepInboundLoading}
                           title="Trace inbound flight arriving before gate departure"
                         >
-                          {deepInboundLoading ? 'Tracing...' : 'Trace Inbound Leg'}
+                          {deepInboundLoading ? 'Tracing Inbound...' : (result.rotation_legs.length > 1 ? '✓ Inbound Traced' : 'Trace Inbound Leg')}
                         </button>
                       </div>
                     </summary>
@@ -873,7 +904,7 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
                                     </div>
                                     <div className="turnaround-bridge-desc">
                                       {result.inbound_cascade?.has_inbound
-                                        ? `Aircraft arrived +${result.inbound_cascade.inbound_delay_min}m late from prior leg, compressing ground servicing window before boarding ${result.flight.flight_code}.`
+                                        ? `Aircraft arrived +${fmtDelayBadge(result.inbound_cascade.inbound_delay_min)} late from prior leg, compressing ground servicing window before boarding ${result.flight.flight_code}.`
                                         : `Aircraft completed prior leg on schedule. Full standard ground turnaround servicing buffer available at gate.`}
                                     </div>
                                   </div>
@@ -894,9 +925,9 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
                                 </div>
                                 <div className="flow-head-right">
                                   {leg.delay_min >= 15 ? (
-                                    <span className="flow-delay-tag delayed">+{leg.delay_min}m Delay</span>
+                                    <span className="flow-delay-tag delayed">+{fmtDelayBadge(leg.delay_min)} Delay</span>
                                   ) : leg.delay_min > 0 ? (
-                                    <span className="flow-delay-tag taxi">+{leg.delay_min}m Taxi Time</span>
+                                    <span className="flow-delay-tag taxi">+{fmtDelayBadge(leg.delay_min)} Taxi Time</span>
                                   ) : (
                                     <span className="flow-delay-tag ontime">On Schedule</span>
                                   )}

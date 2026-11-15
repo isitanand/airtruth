@@ -433,9 +433,9 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
     : isOnTime
       ? 'Flight On Time · No Claim Needed'
       : isUnder2h
-        ? (liveSched?.delay_minutes ? `Minor Gate Delay (+${fmtDelayBadge(liveSched.delay_minutes)})` : 'Minor Delay · Standard Gate Timing')
+        ? (liveSched?.delay_minutes ? `Minor Gate Delay (${fmtDelayBadge(liveSched.delay_minutes)})` : 'Minor Delay · Standard Gate Timing')
         : isSevereDelay
-          ? (liveSched?.delay_minutes ? `Severe Gate Delay (+${fmtDelayBadge(liveSched.delay_minutes)})` : 'Severe Delay · Weather Excuse Questioned')
+          ? (liveSched?.delay_minutes ? `Severe Gate Delay (${fmtDelayBadge(liveSched.delay_minutes)})` : 'Severe Delay · Weather Excuse Questioned')
           : 'Delay Status Checked'
   const fr24Slug = (result?.flight.flight_code ?? '').replace(/[^A-Z0-9]/gi, '').toLowerCase()
   const faSlug = (result?.flight.callsign ?? fr24Slug).toUpperCase()
@@ -601,7 +601,7 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
                     <span className="verdict-status-pill">{bannerStatus}</span>
                     <span className="verdict-payout-pill">
                       {isUnder2h && liveSched?.delay_minutes
-                        ? `+${fmtDelayBadge(liveSched.delay_minutes)} Gate Delay`
+                        ? `${fmtDelayBadge(liveSched.delay_minutes)} Gate Delay`
                         : result.compensation.amount_display}
                     </span>
                   </div>
@@ -627,7 +627,7 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
                           <>
                             <span>Gate Pushback: <b>{liveSched.act_dep ? liveSched.act_dep.split(' ')[1] : 'N/A'}</b></span>
                             {liveSched.dep_delayed ? (
-                              <span className="delay-badge">+{fmtDelayBadge(liveSched.dep_delayed)} late</span>
+                              <span className="delay-badge">{fmtDelayBadge(liveSched.dep_delayed)} late</span>
                             ) : (
                               <span className="ontime-badge">On time</span>
                             )}
@@ -688,8 +688,8 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
                       <small>
                         {isCancelled
                           ? 'Flight cancelled by carrier · Grounded'
-                          : (liveSched.delay_minutes ? `+${fmtDelayWords(liveSched.delay_minutes)} gate delay (${liveSched.delay_minutes}m)` : 'Tracking on time') +
-                            (liveSched.percent_flown != null ? ` · ${liveSched.percent_flown}% flown` : (statusStr === 'landed' ? ' · 100% flown' : ''))}
+                          : (liveSched.delay_minutes ? `${fmtDelayBadge(liveSched.delay_minutes)} gate delay` : 'Tracking on time') +
+                            (liveSched.percent_flown != null ? ` · ${Math.min(100, Math.max(0, liveSched.percent_flown))}% flown` : (statusStr === 'landed' ? ' · 100% flown' : ''))}
                       </small>
                     </div>
 
@@ -709,7 +709,7 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
                           <>
                             <span>Gate In (Est): <b>{liveSched.act_arr ? liveSched.act_arr.split(' ')[1] : 'N/A'}</b></span>
                             {liveSched.arr_delayed ? (
-                              <span className="delay-badge">+{fmtDelayBadge(liveSched.arr_delayed)} late</span>
+                              <span className="delay-badge">{fmtDelayBadge(liveSched.arr_delayed)} late</span>
                             ) : (
                               <span className="ontime-badge">On time</span>
                             )}
@@ -805,7 +805,7 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
                     <span>5. Statutory Passenger Rights</span>
                     <b style={{ color: isOnTime ? '#64748b' : 'var(--emerald)' }}>
                       {isUnder2h && liveSched?.delay_minutes
-                        ? `+${fmtDelayBadge(liveSched.delay_minutes)} Delay (Care Only)`
+                        ? `${fmtDelayBadge(liveSched.delay_minutes)} Delay (Care Only)`
                         : result.compensation.amount_display}
                     </b>
                     <small>{result.compensation.statute} · {result.compensation.regulator}</small>
@@ -879,7 +879,7 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
                           disabled={deepInboundLoading}
                           title="Trace inbound flight arriving before gate departure"
                         >
-                          {deepInboundLoading ? 'Tracing Inbound...' : (result.rotation_legs.length > 1 ? '✓ Inbound Traced' : 'Trace Inbound Leg')}
+                          {deepInboundLoading ? 'Tracing Inbound...' : (result.rotation_legs.length > 1 ? 'Inbound Traced' : 'Trace Inbound Leg')}
                         </button>
                       </div>
                     </summary>
@@ -904,7 +904,7 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
                                     </div>
                                     <div className="turnaround-bridge-desc">
                                       {result.inbound_cascade?.has_inbound
-                                        ? `Aircraft arrived +${fmtDelayBadge(result.inbound_cascade.inbound_delay_min)} late from prior leg, compressing ground servicing window before boarding ${result.flight.flight_code}.`
+                                        ? `Aircraft arrived ${fmtDelayBadge(result.inbound_cascade.inbound_delay_min)} late from prior leg, compressing ground servicing window before boarding ${result.flight.flight_code}.`
                                         : `Aircraft completed prior leg on schedule. Full standard ground turnaround servicing buffer available at gate.`}
                                     </div>
                                   </div>
@@ -925,9 +925,9 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
                                 </div>
                                 <div className="flow-head-right">
                                   {leg.delay_min >= 15 ? (
-                                    <span className="flow-delay-tag delayed">+{fmtDelayBadge(leg.delay_min)} Delay</span>
+                                    <span className="flow-delay-tag delayed">{fmtDelayBadge(leg.delay_min)} Delay</span>
                                   ) : leg.delay_min > 0 ? (
-                                    <span className="flow-delay-tag taxi">+{fmtDelayBadge(leg.delay_min)} Taxi Time</span>
+                                    <span className="flow-delay-tag taxi">{fmtDelayBadge(leg.delay_min)} Taxi Time</span>
                                   ) : (
                                     <span className="flow-delay-tag ontime">On Schedule</span>
                                   )}
@@ -950,21 +950,45 @@ export function FlightLookup({ initialQuery = '', id = 'audit' }: { initialQuery
                                   </div>
                                 </div>
 
-                                <div className="flow-metrics-row">
-                                  <div className="flow-metric-item">
-                                    <span className="metric-lbl">Scheduled Times</span>
-                                    <span className="metric-val">{schedDepTime} Dep → {schedArrTime} Arr</span>
-                                  </div>
-                                  <div className="flow-metric-item">
-                                    <span className="metric-lbl">Actual Gate Times</span>
-                                    <span className="metric-val">{actDepTime} Push → {actArrTime} In</span>
-                                  </div>
-                                  {leg.takeoff_time && (
-                                    <div className="flow-metric-item radar">
-                                      <span className="metric-lbl">Radar Transponder</span>
-                                      <span className="metric-val">Wheels-up {fmtTimeOnly(leg.takeoff_time)} → ~{fmtTimeOnly(leg.touchdown_time || schedArrTime)}</span>
+                                <div className="flow-stations-grid">
+                                  <div className="flow-station-card dep">
+                                    <div className="station-card-head">Departure · {leg.origin}</div>
+                                    <div className="station-timings-list">
+                                      <div className="station-timing-item">
+                                        <span className="timing-lbl">Scheduled</span>
+                                        <span className="timing-val">{schedDepTime}</span>
+                                      </div>
+                                      <div className="station-timing-item">
+                                        <span className="timing-lbl">Gate Pushback</span>
+                                        <span className="timing-val">{actDepTime}</span>
+                                      </div>
+                                      {leg.takeoff_time && (
+                                        <div className="station-timing-item radar">
+                                          <span className="timing-lbl">Wheels-Up</span>
+                                          <span className="timing-val">{fmtTimeOnly(leg.takeoff_time)}</span>
+                                        </div>
+                                      )}
                                     </div>
-                                  )}
+                                  </div>
+                                  <div className="flow-station-card arr">
+                                    <div className="station-card-head">Arrival · {leg.dest}</div>
+                                    <div className="station-timings-list">
+                                      <div className="station-timing-item">
+                                        <span className="timing-lbl">Scheduled</span>
+                                        <span className="timing-val">{schedArrTime}</span>
+                                      </div>
+                                      <div className="station-timing-item">
+                                        <span className="timing-lbl">Gate In</span>
+                                        <span className="timing-val">{actArrTime}</span>
+                                      </div>
+                                      {leg.touchdown_time && (
+                                        <div className="station-timing-item radar">
+                                          <span className="timing-lbl">Touchdown</span>
+                                          <span className="timing-val">~{fmtTimeOnly(leg.touchdown_time)}</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
                                 </div>
 
                                 <div className="flow-insight-row">

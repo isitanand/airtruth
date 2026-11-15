@@ -635,7 +635,7 @@ def fetch_live_flight_schedule(flight_iata: str) -> dict[str, Any] | None:
                     "lon": float(row["lng"]) if row.get("lng") is not None else None,
                     "alt_ft": alt_ft,
                     "speed_kmh": round(float(row["speed"]), 1) if row.get("speed") is not None else None,
-                    "percent_flown": int(row["percent"]) if row.get("percent") is not None else None,
+                    "percent_flown": min(100, max(0, int(row["percent"]))) if row.get("percent") is not None else None,
                     "eta_minutes": int(row["eta"]) if row.get("eta") is not None else None,
                     "dep_name": row.get("dep_name"),
                     "arr_name": row.get("arr_name"),
@@ -823,16 +823,19 @@ def fetch_inbound_aircraft_leg(
         candidates = []
         if inbound_code:
             candidates.append(inbound_code)
-        if digits and digits.isdigit():
+        elif digits and digits.isdigit():
             d_val = int(digits)
-            if d_val > 1:
-                candidates.append(f"{airline_iata}-{d_val - 1}")
-            candidates.append(f"{airline_iata}-{d_val + 1}")
+            # Standard return pairing: even pairs with (n-1), odd pairs with (n+1)
+            primary_pair = (d_val - 1) if (d_val % 2 == 0) else (d_val + 1)
+            candidates.append(f"{airline_iata}-{primary_pair}")
+            fallback_pair = (d_val + 1) if (d_val % 2 == 0) else (d_val - 1)
+            if fallback_pair > 0:
+                candidates.append(f"{airline_iata}-{fallback_pair}")
 
-        # Check candidate schedules: prioritize the one that lands at the passenger's departure airport (dep_iata)
+        # Check candidate schedules: at most 1 or 2 calls to preserve AirLabs quota
         best_cand = None
         best_sched = None
-        for cand in candidates:
+        for cand in candidates[:2]:
             clean_cand = re.sub(r"[^A-Z0-9]", "", cand.upper())
             sc = fetch_live_flight_schedule(clean_cand)
             if sc:
@@ -991,7 +994,26 @@ def resolve_airport(iata: str | None) -> tuple[str | None, float | None, float |
     if not _external_telemetry_allowed():
         return None, None, None
 
-    # Query AirLabs global airport catalog if API key is present
+    # 1. AviationWeather /api/data/airport (NOAA) is free, fast, and does not consume AirLabs quota
+    for candidate in (code, f"K{code}"):
+        url = f"https://aviationweather.gov/api/data/airport?ids={candidate}&format=json"
+        req = urllib.request.Request(url, headers={"User-Agent": "AIRTRUTH/1.0 (+passenger-delay-audit)"})
+        try:
+            with urllib.request.urlopen(req, timeout=3.5) as resp:
+                rows = json.loads(resp.read().decode("utf-8"))
+            if isinstance(rows, list) and rows:
+                row = rows[0]
+                icao = str(row.get("icaoId") or "").upper()
+                lat = float(row.get("lat") or 0.0)
+                lon = float(row.get("lon") or 0.0)
+                if len(icao) == 4 and (lat != 0.0 or lon != 0.0):
+                    val = (icao, lat, lon)
+                    _AIRPORT_CACHE[code] = (now, val)
+                    return val
+        except Exception:
+            continue
+
+    # 2. Query AirLabs global airport catalog only as fallback
     airlabs_keys = _get_airlabs_keys()
     for airlabs_key in airlabs_keys:
         try:
@@ -1009,25 +1031,6 @@ def resolve_airport(iata: str | None) -> tuple[str | None, float | None, float |
                 al_lon = float(al_r0.get("lng") or 0.0)
                 if len(al_icao) == 4:
                     val = (al_icao, al_lat, al_lon)
-                    _AIRPORT_CACHE[code] = (now, val)
-                    return val
-        except Exception:
-            continue
-
-    # AviationWeather /api/data/airport accepts 4-letter ICAO or 3-letter FAA/IATA on supported fields, try K+IATA for US then general query
-    for candidate in (code, f"K{code}"):
-        url = f"https://aviationweather.gov/api/data/airport?ids={candidate}&format=json"
-        req = urllib.request.Request(url, headers={"User-Agent": "AIRTRUTH/1.0 (+passenger-delay-audit)"})
-        try:
-            with urllib.request.urlopen(req, timeout=3.5) as resp:
-                rows = json.loads(resp.read().decode("utf-8"))
-            if isinstance(rows, list) and rows:
-                row = rows[0]
-                icao = str(row.get("icaoId") or "").upper()
-                lat = float(row.get("lat") or 0.0)
-                lon = float(row.get("lon") or 0.0)
-                if len(icao) == 4 and (lat != 0.0 or lon != 0.0):
-                    val = (icao, lat, lon)
                     _AIRPORT_CACHE[code] = (now, val)
                     return val
         except Exception:
@@ -1591,6 +1594,74 @@ def audit_flight(
             if hex_meta.get("aircraft_type"):
                 live_sched["aircraft_model"] = hex_meta["aircraft_type"]
 
+        # Cross-check live ADS-B flight transponder against schedule to correct stale airline timetable feeds
+        if _external_telemetry_allowed():
+            try:
+                now_ts = int(time.time())
+                url_os = f"https://opensky-network.org/api/flights/aircraft?icao24={hex_code.lower()}&begin={now_ts - 86400}&end={now_ts}"
+                req_os = urllib.request.Request(url_os, headers={"User-Agent": "AIRTRUTH/1.0 (+live-transponder-audit)"})
+                with urllib.request.urlopen(req_os, timeout=4.0) as r_os:
+                    os_legs = json.loads(r_os.read().decode("utf-8"))
+                if os_legs and isinstance(os_legs, list):
+                    m_d = re.findall(r"\d+", fc)
+                    d_str = max(m_d, key=len) if m_d else ""
+                    current_os_leg = None
+                    for leg in os_legs:
+                        cs = (leg.get("callsign") or "").strip().upper()
+                        if d_str and d_str in cs:
+                            current_os_leg = leg
+                            break
+                        if org_icao and leg.get("estDepartureAirport") == org_icao:
+                            current_os_leg = leg
+                            break
+                    if current_os_leg and current_os_leg.get("firstSeen"):
+                        fs_utc = datetime.fromtimestamp(current_os_leg["firstSeen"], tz=timezone.utc)
+                        tz_offset_min = 330 if org in _IN_AIRPORTS else 0
+                        fs_local = fs_utc + timedelta(minutes=tz_offset_min)
+                        fs_time_str = fs_local.strftime("%H:%M")
+                        live_sched["takeoff_time"] = fs_time_str
+
+                        al_act_dep = live_sched.get("act_dep")
+                        if al_act_dep and " " in al_act_dep:
+                            try:
+                                al_dep_dt = datetime.strptime(al_act_dep[:16], "%Y-%m-%d %H:%M")
+                                diff_min = (fs_local.replace(tzinfo=None) - al_dep_dt).total_seconds() / 60
+                                if abs(diff_min) > 75:
+                                    shift_hours = round(diff_min / 60)
+                                    s_dep_str = live_sched.get("sched_dep")
+                                    s_arr_str = live_sched.get("sched_arr")
+                                    if s_dep_str and " " in s_dep_str:
+                                        s_dep_dt = datetime.strptime(s_dep_str[:16], "%Y-%m-%d %H:%M")
+                                        live_sched["sched_dep"] = (s_dep_dt + timedelta(hours=shift_hours)).strftime("%Y-%m-%d %H:%M")
+                                    if s_arr_str and " " in s_arr_str:
+                                        s_arr_dt = datetime.strptime(s_arr_str[:16], "%Y-%m-%d %H:%M")
+                                        live_sched["sched_arr"] = (s_arr_dt + timedelta(hours=shift_hours)).strftime("%Y-%m-%d %H:%M")
+
+                                    live_sched["act_dep"] = (fs_local - timedelta(minutes=15)).strftime("%Y-%m-%d %H:%M")
+
+                                    if current_os_leg.get("lastSeen"):
+                                        ls_utc = datetime.fromtimestamp(current_os_leg["lastSeen"], tz=timezone.utc)
+                                        ls_local = ls_utc + timedelta(minutes=tz_offset_min)
+                                        live_sched["touchdown_time"] = ls_local.strftime("%H:%M")
+                                        live_sched["act_arr"] = (ls_local + timedelta(minutes=6)).strftime("%Y-%m-%d %H:%M")
+
+                                    if live_sched.get("sched_dep") and live_sched.get("act_dep"):
+                                        sd_dt = datetime.strptime(live_sched["sched_dep"][:16], "%Y-%m-%d %H:%M")
+                                        ad_dt = datetime.strptime(live_sched["act_dep"][:16], "%Y-%m-%d %H:%M")
+                                        live_sched["dep_delayed"] = max(0, int((ad_dt - sd_dt).total_seconds() / 60))
+                                    if live_sched.get("sched_arr") and live_sched.get("act_arr"):
+                                        sa_dt = datetime.strptime(live_sched["sched_arr"][:16], "%Y-%m-%d %H:%M")
+                                        aa_dt = datetime.strptime(live_sched["act_arr"][:16], "%Y-%m-%d %H:%M")
+                                        arr_del = max(0, int((aa_dt - sa_dt).total_seconds() / 60))
+                                        live_sched["arr_delayed"] = arr_del
+                                        live_sched["delay_minutes"] = arr_del
+
+                                    live_sched["source"] = "ADS-B Transponder Verified (OpenSky)"
+                            except Exception:
+                                pass
+            except Exception:
+                pass
+
     # If live ADS-B was not caught yet but AirLabs has active telemetry, populate live_adsb
     if not live_adsb and live_sched and live_sched.get("lat") is not None:
         live_adsb = {
@@ -1933,18 +2004,20 @@ def audit_flight(
     rot_legs: list[dict[str, Any]] = []
     inbound_cascade_info: dict[str, Any] | None = None
     if live_sched:
-        hex_code = live_sched.get("hex") or (live_adsb or {}).get("hex")
-        inbound_leg = fetch_inbound_aircraft_leg(
-            hex_code=hex_code,
-            flight_code=fc,
-            dep_iata=org,
-            arr_iata=dst,
-            airline_iata=parsed["carrier_code"],
-            tail_num=tail_num,
-            deep_scan=trace_inbound,
-            parent_sched=live_sched,
-            flight_date=flight_date,
-        )
+        inbound_leg = None
+        if trace_inbound:
+            hex_code = live_sched.get("hex") or (live_adsb or {}).get("hex")
+            inbound_leg = fetch_inbound_aircraft_leg(
+                hex_code=hex_code,
+                flight_code=fc,
+                dep_iata=org,
+                arr_iata=dst,
+                airline_iata=parsed["carrier_code"],
+                tail_num=tail_num,
+                deep_scan=True,
+                parent_sched=live_sched,
+                flight_date=flight_date,
+            )
 
         def _fmt_hm(val: str | None) -> str:
             if not val:

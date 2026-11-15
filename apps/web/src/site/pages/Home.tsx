@@ -55,7 +55,7 @@ function Hero() {
           <h1 id="hero-title" className="display hero-title">
             {line("It isn't", 0)}
             {line('always the', 1)}
-            {line('Weather.', 2, 'acc')}
+            {line('weather.', 2, 'acc')}
           </h1>
           <div className="hero-rest">
             <p className="lead enter d3">

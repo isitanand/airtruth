@@ -500,7 +500,10 @@ img { display: block; max-width: 100%; }
   .hero-title { padding-top: 36px; padding-bottom: 20px; }
   .hero-rest { padding: 28px 0 48px; }
 }
-@media (max-width: 680px) { .hero-title { font-size: clamp(56px, 16vw, 80px); } .stage { padding: 20px var(--pad) 24px; } }
+@media (max-width: 680px) {
+  .hero-title { font-size: clamp(46px, 14.5vw, 76px); line-height: .98; }
+  .stage { padding: 20px var(--pad) 24px; }
+}
 
 /* Section heads without kickers; three layouts so no two neighbours repeat. */
 .sec-head.wide { grid-template-columns: minmax(0, 1fr); }
@@ -2743,6 +2746,9 @@ main, .footer { overflow-x: clip; }
 
 /* Extra small mobile (< 400px, e.g. iPhone SE, 360px phones) */
 @media (max-width: 400px) {
+  .hero-title {
+    font-size: clamp(38px, 12.5vw, 46px);
+  }
   .flow-name {
     display: none;
   }

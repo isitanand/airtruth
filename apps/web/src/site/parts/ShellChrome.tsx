@@ -199,7 +199,7 @@ export function Footer({ children }: { children?: ReactNode }) {
 
       <div className="footer-base">
         <p className="footer-note">
-          <strong>AIRTRUTH</strong> &middot; Carrier app replicas (IndiGo, Delta, British Airways) are concept telemetry sandboxes for statutory passenger rights verification under DGCA CAR &sect;3, EU261, and US DOT 14 CFR &sect;260.
+          <strong>AIRTRUTH</strong> &middot; Carrier app replicas (IndiGo, Delta, British Airways) are concept telemetry sandboxes for statutory passenger rights verification under DGCA CAR &sect;3, EU261, and US DOT 14 CFR &sect;260. <em>Disclaimer: AirTruth provides independent flight telemetry and meteorological data analysis for informational purposes. AirTruth is not a law firm, does not provide legal counsel, and does not guarantee dispute outcomes; statutory claims are adjudicated by airlines and respective aviation authorities.</em>
         </p>
 
         <div className="footer-bottom-bar">
